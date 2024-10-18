@@ -29,7 +29,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def rolling_probability(df: pd.DataFrame, roll_in_hours: Union[int, float], number_of_samples: int) -> pd.DataFrame:
+def rolling_probability(df: pd.DataFrame, roll_in_hours: int, number_of_samples: int) -> pd.DataFrame:
     """
     Функция сглаживает вероятность target_value в фрейме
     :param df: фрейм с target_value

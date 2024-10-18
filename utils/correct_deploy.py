@@ -153,7 +153,7 @@ def application_create_path_dict(config: dict, name: str, data: dict, testsuite_
     """
     logger.info(f"application_create_path_dict(config, name, data, testsuite_path, archive_path)")
     config[name] = {
-        'csv_slices': os.path.join(testsuite_path, data['data']),
+        'slices': os.path.join(testsuite_path, data['data']),
         'kks_with_groups': os.path.join(testsuite_path, data['kks']),
         'predict': os.path.join(archive_path, name, 'csv_predict'),
         'loss': os.path.join(archive_path, name, 'csv_loss'),

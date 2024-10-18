@@ -1,4 +1,9 @@
 __pycache__/
+/objects/
+node_modules/
+/web/
+
+config.yaml
 
 # Logs
 logs
@@ -9,7 +14,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+
 .DS_Store
 dist
 dist-ssr
@@ -20,7 +25,7 @@ coverage
 /cypress/screenshots/
 
 # Editor directories and files
-.vscode/*
+vue/.vscode/*
 !.vscode/extensions.json
 .idea
 *.suo
