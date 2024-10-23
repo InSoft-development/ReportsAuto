@@ -124,6 +124,7 @@ export async function updatePlotlyInterval(
   layout,
   objectSelected,
   groupSelected,
+  intervalSelected='all'
 ) {
   let url = URL + 'api/update_plotly_interval/'
 
@@ -132,6 +133,7 @@ export async function updatePlotlyInterval(
       params: {
         objectSelected: objectSelected.value,
         groupSelected: groupSelected.value,
+        intervalSelected: intervalSelected
       },
     })
     .then(res => {

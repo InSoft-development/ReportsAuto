@@ -1,7 +1,7 @@
 <script>
-import { ref, reactive, computed, onMounted, toRef, toRefs, watch } from 'vue'
+import { ref, onMounted, toRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { newPlot, react } from 'plotly.js-dist'
+import { newPlot } from 'plotly.js-dist'
 
 import { useApplicationStore } from '../../stores/applicationStore'
 
@@ -15,7 +15,7 @@ export default {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { object, group } = storeToRefs(applicationStore)
+    const { object, group, collapsed } = storeToRefs(applicationStore)
 
     // Ref-ссылка на div блок с Plotly
     const plotly = ref(null)
@@ -23,6 +23,7 @@ export default {
     const plotlyConfig = {
       scrollZoom: true,
       displayModeBar: false,
+      responsive: true
     }
     // Ссылка на проп данных для графика для сохранениея реактивности
     const dataRef = toRef(props, 'data')
@@ -34,8 +35,8 @@ export default {
       newPlot(plotly.value, dataRef.value, layoutRef.value, plotlyConfig)
     })
 
-    watch([dataRef, layoutRef], () => {
-      react(plotly.value, dataRef.value, layoutRef.value, plotlyConfig)
+    watch([dataRef, layoutRef, collapsed], () => {
+      newPlot(plotly.value, dataRef.value, layoutRef.value, plotlyConfig)
     })
 
     return {

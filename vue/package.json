@@ -21,6 +21,7 @@
     "plotly.js-dist": "^2.35.2",
     "primeicons": "^7.0.0",
     "primevue": "^3.53.0",
+    "socket.io-client": "^4.8.0",
     "vue": "^3.5.11",
     "vue-router": "^4.4.5",
     "vue-sidebar-menu": "^5.4.2"

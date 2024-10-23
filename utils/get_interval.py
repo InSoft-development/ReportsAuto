@@ -173,6 +173,13 @@ def main():
     with open(args.config, 'r') as read_file:
         config = yaml.safe_load(read_file)
 
+    # Общее количество групп и счетчик группы для определения % выполнения
+    groups_sum = sum([config[key]['count_of_groups'] if key != 'post_processing' else 0 for key in config])
+    group_number = 0
+
+    with open('complete.log', 'w') as write_file:
+        write_file.write("0%")
+
     for object_directory in os.listdir(args.source):
         logger.info(object_directory)
 
@@ -285,7 +292,16 @@ def main():
 
             with open(json_interval, "w") as json_write:
                 json.dump(dict_list, json_write, indent=4)
+
+            group_number += 1
+
             logger.info(f'{json_interval} has been saved')
+            logger.info(f"{int(group_number / groups_sum * 100)}% completed")
+
+            with open('complete.log', 'w') as write_file:
+                write_file.write(f"{int(group_number / groups_sum * 100)}%")
+
+    os.remove('complete.log')
 
 
 if __name__ == '__main__':

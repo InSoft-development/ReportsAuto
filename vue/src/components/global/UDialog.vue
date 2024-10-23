@@ -1,18 +1,20 @@
 <script>
-import { ref, reactive, computed, onMounted, toRef, toRefs } from 'vue'
+import { ref, reactive, computed, onMounted, toRef, toRefs, onUnmounted, onBeforeUnmount } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import { storeToRefs } from 'pinia'
 
 import { useApplicationStore } from '../../stores/applicationStore'
 
-import { initPostProcessing, startIntervalDetection } from '../../stores'
+import { initPostProcessing, startIntervalDetection, cancelIntervalDetection } from '../../stores'
+
+import { socket } from '../../socket'
 
 export default {
   name: 'UDialog',
   props: {
     visible: Boolean,
   },
-  emits: ['closeDialog'],
+  emits: ['closeDialog', 'redirect'],
   setup(props, context) {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
@@ -22,10 +24,23 @@ export default {
     // Ссылка видимости диалога на проп для сохранениея реактивности
     const visibleRef = toRef(props, 'visible')
     const closeDialog = async () => {
+      // Если уже начали процесс выделения интервалов
+      if (dialogElementsDisable.value) {
+        await cancelIntervalDetection()
+        return 
+      }
       context.emit('closeDialog')
       // Восстанавливаем значения постобработки, если не стали выделять интервалы
       await initPostProcessing(postProcessing)
     }
+
+    const redirectAfterIntervalDetection = async () => {
+      context.emit('redirect')
+      // Восстанавливаем значения постобработки, если не стали выделять интервалы
+      await initPostProcessing(postProcessing)
+    }
+
+    const dialogElementsDisable = ref(false)
 
     // Параметры пост обработки
     const postProcessing = ref({
@@ -38,6 +53,8 @@ export default {
       thresholdLong: Number(),
       thresholdShort: Number(),
     })
+
+    const percentIntervalDetection = ref(0)
 
     // Диалоговое окно подтверждения выделения интервалов
     const confirm = useConfirm()
@@ -60,22 +77,49 @@ export default {
 
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
+      // Регистрируем событие закрытия веб-приложения
+      window.addEventListener('beforeunload', async (event) => {
+        await cancelIntervalDetection()
+      })
+      dialogElementsDisable.value = true
       // Инициализируем диалоговое окно постобработки начальными значениями
       await initPostProcessing(postProcessing)
+      dialogElementsDisable.value = false
     })
 
     // Запуск выделения интервалов
     const startInterval = async () => {
+      percentIntervalDetection.value = 0
+      dialogElementsDisable.value = true
       await startIntervalDetection(postProcessing)
       // Инициализируем диалоговое окно постобработки сохраненными значениями
-      await initPostProcessing(postProcessing)
-      await closeDialog()
+      // await initPostProcessing(postProcessing)
+      await redirectAfterIntervalDetection()
+      dialogElementsDisable.value = false
     }
+
+    // Хук, вывываемый перед размонтировкой компонента - закрытие веб-приложения
+    onBeforeUnmount(async () => {
+      window.removeEventListener('beforeunload', async (event) => {})
+    })
+
+    // Хук, вызываемый при размонтировки компонента - закрытие веб-приложения
+    onUnmounted(async () => {
+      await cancelIntervalDetection()
+    })
+
+
+    // Прослушка процента выполнения выделения интервалов
+    socket.on('setPercentIntervalDetection', (percents) => {
+      percentIntervalDetection.value = percents
+    })
 
     return {
       visibleRef,
       closeDialog,
+      dialogElementsDisable,
       postProcessing,
+      percentIntervalDetection,
       confirmStartInterval,
     }
   },
@@ -106,6 +150,7 @@ export default {
               :min="0"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-roll_in_hours"
               >Сглаживание в часах</label
@@ -123,6 +168,7 @@ export default {
               :min="1"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-count-top"
               >Количество датчиков, внесших максимальный вклад</label
@@ -143,6 +189,7 @@ export default {
               :max="100"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-threshold_short">Threshold short</label>
           </FloatLabel>
@@ -159,6 +206,7 @@ export default {
               :max="100"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-threshold_long">Threshold long</label>
           </FloatLabel>
@@ -176,6 +224,7 @@ export default {
               :min="0"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-len_short">Len short</label>
           </FloatLabel>
@@ -191,6 +240,7 @@ export default {
               :min="0"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-len_long">Len long</label>
           </FloatLabel>
@@ -208,6 +258,7 @@ export default {
               :min="0"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-count_continue_short"
               >Count continue short</label
@@ -225,6 +276,7 @@ export default {
               :min="0"
               :step="1"
               :allowEmpty="false"
+              :disabled="dialogElementsDisable"
             />
             <label for="post-processing-count_continue_long"
               >Count continue long</label
@@ -234,17 +286,34 @@ export default {
       </div>
     </div>
     <template #footer>
-      <Button label="Отмена" icon="pi pi-times" text @click="closeDialog" />
-      <Button
-        label="Запустить выделение интервалов"
-        icon="pi pi-check"
-        @click="confirmStartInterval"
-      />
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-4">
+            <ProgressBar
+              v-if="dialogElementsDisable"
+              :value="percentIntervalDetection"
+            ></ProgressBar>
+          </div>
+          <div class="col-2 text-end">
+            <Button label="Отмена" icon="pi pi-times" text @click="closeDialog" />
+          </div>
+          <div class="col-6 text-end">
+            <Button
+              label="Запустить выделение интервалов"
+              icon="pi pi-check"
+              @click="confirmStartInterval"
+              :disabled="dialogElementsDisable"
+            />
+          </div>
+        </div>
+      </div>
+<!--      <div>-->
+<!--         <ProgressBar-->
+<!--          :value="percentIntervalDetection"-->
+<!--          v-if="dialogElementsDisable"-->
+<!--        ></ProgressBar>-->
+<!--      </div>-->
       <ConfirmDialog></ConfirmDialog>
-      <!--                    <ProgressBar-->
-      <!--                        :value="progressBarRebuildIntervalValue"-->
-      <!--                        v-if="progressBarRebuildIntervalActive"-->
-      <!--                      ></ProgressBar>-->
     </template>
   </Dialog>
 </template>

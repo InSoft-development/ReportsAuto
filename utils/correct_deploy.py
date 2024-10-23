@@ -5,7 +5,6 @@ import os
 import errno
 
 import ipaddress
-import shutil
 import yaml
 
 import pandas as pd

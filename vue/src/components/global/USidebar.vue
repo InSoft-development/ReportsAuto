@@ -14,28 +14,14 @@ export default {
   components: {
     SidebarMenu,
   },
-  emits: ['redirectToHome', 'changeSidebarWidth'],
+  emits: ['redirectToHome'],
   setup(props, context) {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { loadStateSidebar } = storeToRefs(applicationStore)
+    const { loadStateSidebar, collapsed, sidebarWidth } = storeToRefs(applicationStore)
     // Меню sidebar
     const sidebarMenu = ref([])
-
-    // Определение сокрытия меню sidebar
-    const collapsed = ref(false)
-
-    // Определение ширины меню sidebar
-    const sidebarWidthUncollapsed = '400px'
-    const sidebarWidthCollapsed = '65px'
-    const sidebarWidth = computed(() => {
-      context.emit(
-        'changeSidebarWidth',
-        collapsed.value ? sidebarWidthCollapsed : sidebarWidthUncollapsed,
-      )
-      return collapsed.value ? sidebarWidthCollapsed : sidebarWidthUncollapsed
-    })
 
     // Select объектов станций
     const objectSelected = ref('')
@@ -66,6 +52,20 @@ export default {
       dialogActive.value = !dialogActive.value
     }
 
+    const onRedirectAfterIntervalDetection = async () => {
+      loadStateSidebar.value = true
+      dialogActive.value = !dialogActive.value
+      await updateSidebar(
+        objectSelected,
+        groupSelected,
+        groupOptions,
+        sidebarMenu.value[1],
+        'object',
+      )
+      context.emit('redirectToHome')
+      loadStateSidebar.value = false
+    }
+
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
       loadStateSidebar.value = true
@@ -92,6 +92,7 @@ export default {
       changeObjectGroup,
       dialogActive,
       onDialogButtonClick,
+      onRedirectAfterIntervalDetection,
     }
   },
 }
@@ -156,6 +157,7 @@ export default {
           <UDialog
             :visible="dialogActive"
             @closeDialog="onDialogButtonClick"
+            @redirect="onRedirectAfterIntervalDetection"
           ></UDialog>
         </div>
       </div>

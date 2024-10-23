@@ -14,6 +14,7 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import ProgressSpinner from 'primevue/progressspinner'
+import ProgressBar from 'primevue/progressbar'
 
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
@@ -63,6 +64,10 @@ const components = [
   {
     name: 'ProgressSpinner',
     component: ProgressSpinner,
+  },
+  {
+    name: 'ProgressBar',
+    component: ProgressBar,
   },
 ]
 

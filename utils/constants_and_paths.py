@@ -4,10 +4,12 @@
 import os
 
 CONFIG = f'config.yaml'
+CONFIG_BACKUP = f'config_backup.yaml'
 CONFIG_STATION = f'config_station.yaml'
 CONFIG_EXP = f'config_exp.yaml'
 
 OBJECTS = f'objects{os.sep}'
+OBJECTS_BACKUP = f'objects_backup{os.sep}'
 
 DATA_DIRECTORY = f'data{os.sep}'
 

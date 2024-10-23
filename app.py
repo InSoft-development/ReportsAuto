@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify, send_file, send_from_directory, Response
 from flask_cors import CORS
+from flask_socketio import SocketIO
 from flask.helpers import send_file
 
 import os
 import argparse
 import time
 import shutil
+import copy
 import json
 import yaml
 
@@ -25,14 +27,18 @@ import utils.correct_deploy as deploy
 import utils.routine_operations as routine
 
 from loguru import logger
+import gevent
 
 VERSION = '1.0.0'
 
 config_path = None
 config = None
+config_backup = None
 
 app = Flask(__name__, static_folder="./web", template_folder="./web", static_url_path="")
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+clients = {}
 
 # Переменная под фрейм исходных данных срезов
 slices_df = None
@@ -48,10 +54,33 @@ loss_df = None
 json_interval = None
 
 
-# Переменная под объект гринлета выделения интервалов
-interval_greenlet = None
+# Переменная под объект процесса Popen выделения интервалов
+p_get_interval = None
+sid_proc = None
 # Переменная под объект гринлета построения отчета
 report_greenlet = None
+
+
+@socketio.on("connect")
+def connect():
+    """
+    Процедура регистрирует присоединение нового клиента и открытие сокета
+    :return:
+    """
+    clients[request.sid] = request.sid
+    logger.info("connect")
+    logger.info(request.sid)
+
+
+@socketio.on("disconnect")
+def disconnect():
+    """
+    Процедура регистрирует разъединение клиента и закрытие сокета
+    :return:
+    """
+    del clients[request.sid]
+    logger.info("disconnect")
+    logger.info(request.sid)
 
 
 @app.route("/", defaults={"path": ""})
@@ -73,10 +102,10 @@ def init_sidebar():
     # Инициализируем исходные интервалы
     json_interval = init_json_interval
     # Инициализируем pandas фреймы
-    slices_df = pd.read_csv(config_path[init_object]['slices'])
+    slices_df = pd.read_csv(config_path[init_object]['slices'], parse_dates=['timestamp'], index_col=['timestamp'])
     kks_with_groups = pd.read_csv(config_path[init_object]['kks_with_groups'], sep=';')
-    roll_df = pd.read_csv(os.path.join(config_path[init_object]['roll'], f'roll_{init_group}.csv'))
-    loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'))
+    roll_df = pd.read_csv(os.path.join(config_path[init_object]['roll'], f'roll_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
+    loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
     # init_objects = list(config_path.keys())
     # init_object = init_objects[0]
@@ -96,10 +125,10 @@ def update_sidebar():
         global slices_df, kks_with_groups, roll_df, loss_df, json_interval
         logger.info(f"update_sidebar_by_object({ob}, {gr})")
         # Загружаем необходимые pandas фреймы при смене объекта
-        slices_df = pd.read_csv(config_path[object_selected]['slices'])
+        slices_df = pd.read_csv(config_path[object_selected]['slices'], parse_dates=['timestamp'], index_col=['timestamp'])
         kks_with_groups = pd.read_csv(config_path[object_selected]['kks_with_groups'], sep=';')
-        roll_df = pd.read_csv(os.path.join(config_path[object_selected]['roll'], f'roll_{group}.csv'))
-        loss_df = pd.read_csv(os.path.join(config_path[object_selected]['loss'], f'loss_{group}.csv'))
+        roll_df = pd.read_csv(os.path.join(config_path[object_selected]['roll'], f'roll_{group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
+        loss_df = pd.read_csv(os.path.join(config_path[object_selected]['loss'], f'loss_{group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
         with open(os.path.join(config_path[object_selected]['json_interval'], f'group_{group}.json'), 'r') as read_file:
             json_interval = json.load(read_file)
@@ -111,8 +140,8 @@ def update_sidebar():
         global roll_df, loss_df, json_interval
         logger.info(f"update_sidebar_by_group({ob}, {gr})")
         # Загружаем необходимые pandas фреймы при смене группы
-        roll_df = pd.read_csv(os.path.join(config_path[object_selected]['roll'], f'roll_{group}.csv'))
-        loss_df = pd.read_csv(os.path.join(config_path[object_selected]['loss'], f'loss_{group}.csv'))
+        roll_df = pd.read_csv(os.path.join(config_path[object_selected]['roll'], f'roll_{group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
+        loss_df = pd.read_csv(os.path.join(config_path[object_selected]['loss'], f'loss_{group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
         with open(os.path.join(config_path[object_selected]['json_interval'], f'group_{group}.json'), 'r') as read_file:
             json_interval = json.load(read_file)
@@ -144,14 +173,23 @@ def init_post_processing():
     return jsonify(postProcessing=routine.dict_to_lower_camel_case(config['post_processing']))
 
 
-@app.route('/api/interval_detection/', methods=['POST'])
-def interval_detection():
-    post_processing = request.get_json('postProcessing')
+@socketio.on('/api/interval_detection/')
+# @app.route('/api/interval_detection/', methods=['POST'])
+def interval_detection(post_processing):
+    global config, config_backup, p_get_interval, sid_proc
+    sid = request.sid
+    if p_get_interval is not None:
+        return {'causeException': "Процесс уже запущен для другого клиента", 'status': 'error'}
+    sid_proc = sid
+    # post_processing = request.get_json('postProcessing')
     logger.info(f"interval_detection({post_processing})")
+
     post_processing = routine.dict_to_snake_case(post_processing)
+    # Временное сохранение директорий объектов и конфига на случай отмены выделения интервалов
+    config_backup = copy.deepcopy(config)
+    routine.copy_recursively_objects_directory(constants.OBJECTS, constants.OBJECTS_BACKUP)
 
     # Сохраняем параметры, на которых выделяем интервал, в конфиг
-    global config
     config['post_processing'] = post_processing
     with open(constants.CONFIG, 'w') as write_file:
         yaml.dump(config, write_file)
@@ -160,46 +198,97 @@ def interval_detection():
     with open(constants.CONFIG, 'r') as read_file:
         config = yaml.safe_load(read_file)
 
-    return jsonify(test="test")
+    # Запуск выделения интервалов, если ошибка, то восстанавливаем исходный конфиг и директории с объектами
+    arguments = ["python", "./get_interval.py", "-s", args.path, "-d", os.getcwd(),
+                 "-c", os.path.join(os.getcwd(), constants.CONFIG)]
+    logger.info(' '.join(arguments))
+    try:
+        p_get_interval = subprocess.Popen(arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                          cwd=os.path.join(os.getcwd(), 'utils'))
+        while p_get_interval.poll() is None:
+            socketio.sleep(2)
+            if os.path.isfile(f'utils{os.sep}complete.log'):
+                with open(f'utils{os.sep}complete.log', 'r') as read_file:
+                    status = read_file.readline()
+                    logger.info(status)
+                    socketio.emit("setPercentIntervalDetection", int(status.strip('%')), to=sid)
+    except subprocess.CalledProcessError as subprocess_exception:
+        logger.error(subprocess_exception)
+        # Восстанавливаем исходный конфиг и объекты
+        config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP,
+                                         constants.OBJECTS)
+        # return jsonify(causeException=str(subprocess_exception), status='error')
+        return {'causeException': str(subprocess_exception), 'status': 'error'}
+    except RuntimeError as run_time_error:
+        logger.error(run_time_error)
+        # Восстанавливаем исходный конфиг и объекты
+        config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP,
+                                         constants.OBJECTS)
+        # return jsonify(causeException=str(run_time_error), status='error')
+        return {'causeException': str(run_time_error), 'status': 'error'}
+    except KeyboardInterrupt as keyboard_interrupt:
+        logger.warning("KeyboardInterrupt")
+        # Восстанавливаем исходный конфиг и объекты
+        config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP,
+                                         constants.OBJECTS)
+        # return jsonify(causeException=str(keyboard_interrupt), status='error')
+        return {'causeException': str(keyboard_interrupt), 'status': 'error'}
+
+    # Интервалы успешно выделились - бекап не нужен, удаляем временную директорию
+    logger.info("p_get_interval finished")
+    # Восстанавливаем исходный конфиг и объекты, если процесс завершился с ошибкой или был прерван
+    return_code = p_get_interval.returncode
+    if return_code != 0:
+        config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP, constants.OBJECTS)
+        p_get_interval = None
+        # return jsonify(causeException=f"код завершения процесса {p_get_interval.returncode}", status='success')
+        return {'causeException': f"код завершения процесса {return_code}", 'status': 'success'}
+    routine.remove_recursively_objects_directory(constants.OBJECTS_BACKUP)
+    p_get_interval = None
+    # return jsonify(status='success')
+    return {'status': 'success'}
+
+
+@socketio.on('/api/cancel_interval_detection/')
+# @app.route('/api/cancel_interval_detection/', methods=['POST'])
+def interval_detection_cancel():
+    global config, p_get_interval, sid_proc
+    sid = request.sid
+
+    if sid_proc != sid:
+        return {'status': 'error'}
+
+    logger.info(f"interval_detection_cancel()")
+    if p_get_interval.poll() is None:
+        p_get_interval.terminate()
+        sid_proc = None
+        logger.info("p_get_interval canceled")
+    return {'status': 'success'}
+    # return jsonify(status='success')
 
 
 @app.route('/api/update_plotly_interval/', methods=['GET'])
 def update_plotly_interval():
-    global slices_df, kks_with_groups, roll_df, loss_df, json_interval
+    def update_plotly_interval_all() -> Response:
+        global roll_df, json_interval
+        logger.info(f"update_plotly_interval_all()")
+        # Заполняем данные графика
+        data, layout = routine.fill_plotly_interval_all(roll_df, object_selected, group_selected, json_interval)
+        return jsonify(data=data, layout=layout)
+
+    def update_plotly_interval_specify(interval_num: int) -> Response:
+        global roll_df, json_interval
+        logger.info(f"update_plotly_interval_specify({interval_num})")
+        data, layout = routine.fill_plotly_interval_specify(roll_df, object_selected, group_selected, interval_num,
+                                                            json_interval, params={'leftSpace': 500, 'rightSpace': 500})
+        return jsonify(data=data, layout=layout)
 
     object_selected = request.args.get('objectSelected', type=str)
     group_selected = request.args.get('groupSelected', type=int)
+    interval_selected = request.args.get('intervalSelected', type=str)
 
-    logger.info(f"update_plotly_interval({object_selected}, {group_selected})")
-
-    # Заполнеям данные графика
-    data = [{
-        'x': roll_df['timestamp'].tolist(),
-        'y': roll_df['target_value'].tolist(),
-        'type': 'scatter'
-    }]
-
-    # Заполняем объект layout графика
-    fill_shapes = lambda begin, end: {
-        'type': 'rect',
-        'xref': 'x',
-        'yref': 'paper',
-        'x0': begin,
-        'y0': 0,
-        'x1': end,
-        'y1': 1,
-        'line': {
-            'width': 1,
-            'color': 'red',
-            'layer': 'below'
-        }
-    }
-    layout = {
-        'title': f'Объект: {object_selected}, Группа: {group_selected}',
-        'shapes': [fill_shapes(interval['time'][0], interval['time'][1]) for interval in json_interval]
-    }
-
-    return jsonify(data=data, layout=layout)
+    logger.info(f"update_plotly_interval({object_selected}, {group_selected}, {interval_selected})")
+    return update_plotly_interval_all() if interval_selected == 'all' else update_plotly_interval_specify(int(interval_selected))
 
 
 def parse_args():
@@ -251,9 +340,9 @@ if __name__ == '__main__':
                      "-c", os.path.join(os.getcwd(), constants.CONFIG)]
         logger.info(' '.join(arguments))
         try:
-            p_get_interval = subprocess.Popen(arguments, stdout=subprocess.PIPE,
-                                              cwd=os.path.join(os.getcwd(), 'utils'))
-            p_get_interval.wait()
+            p_get_interval_init = subprocess.Popen(arguments, stdout=subprocess.PIPE,
+                                                   cwd=os.path.join(os.getcwd(), 'utils'))
+            p_get_interval_init.wait()
         except subprocess.CalledProcessError as subprocess_exception:
             logger.error(subprocess_exception)
             exit(0)
@@ -283,10 +372,11 @@ if __name__ == '__main__':
     json_interval = init_json_interval
 
     # Инициализируем pandas фреймы
-    slices_df = pd.read_csv(config_path[init_object]['slices'])
+    slices_df = pd.read_csv(config_path[init_object]['slices'], parse_dates=['timestamp'], index_col=['timestamp'])
     kks_with_groups = pd.read_csv(config_path[init_object]['kks_with_groups'], sep=';')
-    roll_df = pd.read_csv(os.path.join(config_path[init_object]['roll'], f'roll_{init_group}.csv'))
-    loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'))
+    roll_df = pd.read_csv(os.path.join(config_path[init_object]['roll'], f'roll_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
+    loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
     logger.info("started")
-    app.run(host=args.host, port=args.port)
+    # app.run(host=args.host, port=args.port)
+    socketio.run(app, host=args.host, port=args.port)

@@ -5,12 +5,14 @@ import { storeToRefs } from 'pinia'
 
 import { useApplicationStore } from './stores/applicationStore'
 
+// import { socket } from './socket'
+
 export default {
   setup() {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { intervals, object, group, loadStateSidebar } =
+    const { intervals, object, group, loadStateSidebar, sidebarWidth } =
       storeToRefs(applicationStore)
 
     // Переадресация URL
@@ -22,9 +24,6 @@ export default {
     const activeIndexTab = computed(() => {
       return Number(route.params.intervalsId)
     })
-
-    // Длина sidebar в px в зависимости от его свертки/развертки
-    const sidebarWidth = ref('')
 
     const routeToHome = () => {
       router.push('/')
@@ -50,15 +49,10 @@ export default {
   </header>
   <USidebar
     @redirectToHome="routeToHome"
-    @changeSidebarWidth="
-      width => {
-        sidebarWidth = width
-      }
-    "
   ></USidebar>
   <div
     v-if="currentRoute !== '/settings'"
-    :style="{ padding: '0 20px 0 20px', 'margin-left': sidebarWidth }"
+    :style="{ 'padding': '0px 20px 0px 20px', 'margin-left': sidebarWidth }"
   >
     <h1 class="text-center">Объект {{ object }}: группа {{ group }}</h1>
     <TabView :scrollable="true" :active-index="activeIndexTab">
@@ -98,5 +92,8 @@ export default {
   position: fixed;
   left: 50%;
   top: 50%;
+}
+.p-tabview-panels{
+  display: none;
 }
 </style>

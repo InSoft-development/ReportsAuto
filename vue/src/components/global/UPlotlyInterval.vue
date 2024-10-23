@@ -13,14 +13,16 @@ export default {
   components: { Plotly },
   props: {
     headerTitle: String(),
+    activeInterval: Number()
   },
   setup(props, context) {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { object, group } = storeToRefs(applicationStore)
+    const { object, group, intervals } = storeToRefs(applicationStore)
 
     const headerTitleRef = toRef(props, 'headerTitle')
+    const activeIntervalRef = toRef(props, 'activeInterval')
 
     // Показ спинера, если идет получение данных и рендеринг графика
     const loadStateInterval = ref(false)
@@ -33,13 +35,13 @@ export default {
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
       loadStateInterval.value = true
-      await updatePlotlyInterval(dataInterval, layoutInterval, object, group)
+      await updatePlotlyInterval(dataInterval, layoutInterval, object, group, activeIntervalRef.value)
       loadStateInterval.value = false
     })
 
-    watch([object, group], async () => {
+    watch([object, group, intervals, activeIntervalRef], async () => {
       loadStateInterval.value = true
-      await updatePlotlyInterval(dataInterval, layoutInterval, object, group)
+      await updatePlotlyInterval(dataInterval, layoutInterval, object, group, activeIntervalRef.value)
       loadStateInterval.value = false
     })
 
@@ -57,20 +59,24 @@ export default {
   <div>
     <h3 class="plotly-interval-header-title">{{ headerTitleRef }}</h3>
     <div class="card d-flex align-items-center justify-content-center">
-      <div class="container">
+      <div class="container-fluid">
         <div class="row position-absolute top-50 start-50 translate-middle z-1">
-          <ProgressSpinner
-            v-if="loadStateInterval"
-            class="z-2"
-            stroke-width="5"
-            animation-duration=".3s"
-            fill="var(--surface-ground)"
-            :style="{ width: '100px', height: '100px' }"
-          >
-          </ProgressSpinner>
+          <div class="col">
+            <ProgressSpinner
+              v-if="loadStateInterval"
+              class="z-2"
+              stroke-width="5"
+              animation-duration=".3s"
+              fill="var(--surface-ground)"
+              :style="{ width: '100px', height: '100px' }"
+            >
+            </ProgressSpinner>
+          </div>
         </div>
         <div class="row">
-          <Plotly :data="dataInterval" :layout="layoutInterval"></Plotly>
+          <div class="col-12">
+            <Plotly :data="dataInterval" :layout="layoutInterval"></Plotly>
+          </div>
         </div>
       </div>
     </div>
