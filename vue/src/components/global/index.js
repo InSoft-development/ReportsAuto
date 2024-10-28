@@ -1,6 +1,7 @@
 import USidebar from './USidebar.vue'
 import UDialog from './UDialog.vue'
 import UPlotlyInterval from './UPlotlyInterval.vue'
+import UPlotlyMultipleAxes from './UPlotlyMultipleAxes.vue'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
@@ -15,6 +16,7 @@ import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
+import Checkbox from 'primevue/checkbox'
 
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
@@ -32,6 +34,10 @@ const components = [
   {
     name: 'UPlotlyInterval',
     component: UPlotlyInterval,
+  },
+  {
+    name: 'UPlotlyMultipleAxes',
+    component: UPlotlyMultipleAxes,
   },
   {
     name: 'Button',
@@ -68,6 +74,10 @@ const components = [
   {
     name: 'ProgressBar',
     component: ProgressBar,
+  },
+  {
+    name: 'Checkbox',
+    component: Checkbox,
   },
 ]
 

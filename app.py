@@ -29,6 +29,8 @@ import utils.routine_operations as routine
 from loguru import logger
 import gevent
 
+from typing import Dict
+
 VERSION = '1.0.0'
 
 config_path = None
@@ -62,7 +64,7 @@ report_greenlet = None
 
 
 @socketio.on("connect")
-def connect():
+def connect() -> None:
     """
     Процедура регистрирует присоединение нового клиента и открытие сокета
     :return:
@@ -73,7 +75,7 @@ def connect():
 
 
 @socketio.on("disconnect")
-def disconnect():
+def disconnect() -> None:
     """
     Процедура регистрирует разъединение клиента и закрытие сокета
     :return:
@@ -96,7 +98,7 @@ def get_api_urls_js():
 
 
 @app.route('/api/init_sidebar/', methods=['GET'])
-def init_sidebar():
+def init_sidebar() -> Response:
     global slices_df, kks_with_groups, roll_df, loss_df, json_interval
     logger.info(f"init_sidebar()")
     # Инициализируем исходные интервалы
@@ -104,6 +106,8 @@ def init_sidebar():
     # Инициализируем pandas фреймы
     slices_df = pd.read_csv(config_path[init_object]['slices'], parse_dates=['timestamp'], index_col=['timestamp'])
     kks_with_groups = pd.read_csv(config_path[init_object]['kks_with_groups'], sep=';')
+    # Убираем Nan-ы в описании датчиков
+    kks_with_groups['name'].fillna(value='ОПИСАНИЯ НЕТ', inplace=True)
     roll_df = pd.read_csv(os.path.join(config_path[init_object]['roll'], f'roll_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
     loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
@@ -120,13 +124,15 @@ def init_sidebar():
 
 
 @app.route('/api/update_sidebar/', methods=['GET'])
-def update_sidebar():
+def update_sidebar() -> Response:
     def update_sidebar_by_object(ob: str, gr: int) -> Response:
         global slices_df, kks_with_groups, roll_df, loss_df, json_interval
         logger.info(f"update_sidebar_by_object({ob}, {gr})")
         # Загружаем необходимые pandas фреймы при смене объекта
         slices_df = pd.read_csv(config_path[object_selected]['slices'], parse_dates=['timestamp'], index_col=['timestamp'])
         kks_with_groups = pd.read_csv(config_path[object_selected]['kks_with_groups'], sep=';')
+        # Убираем Nan-ы в описании датчиков
+        kks_with_groups['name'].fillna(value='ОПИСАНИЯ НЕТ', inplace=True)
         roll_df = pd.read_csv(os.path.join(config_path[object_selected]['roll'], f'roll_{group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
         loss_df = pd.read_csv(os.path.join(config_path[object_selected]['loss'], f'loss_{group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
@@ -167,15 +173,14 @@ def update_sidebar():
 
 
 @app.route('/api/init_post_processing/', methods=['GET'])
-def init_post_processing():
-    global slices_df, kks_with_groups
+def init_post_processing() -> Response:
     logger.info(f"init_post_processing()")
     return jsonify(postProcessing=routine.dict_to_lower_camel_case(config['post_processing']))
 
 
 @socketio.on('/api/interval_detection/')
 # @app.route('/api/interval_detection/', methods=['POST'])
-def interval_detection(post_processing):
+def interval_detection(post_processing) -> Dict[str, str]:
     global config, config_backup, p_get_interval, sid_proc
     sid = request.sid
     if p_get_interval is not None:
@@ -251,7 +256,7 @@ def interval_detection(post_processing):
 
 @socketio.on('/api/cancel_interval_detection/')
 # @app.route('/api/cancel_interval_detection/', methods=['POST'])
-def interval_detection_cancel():
+def interval_detection_cancel() -> Dict[str, str]:
     global config, p_get_interval, sid_proc
     sid = request.sid
 
@@ -268,7 +273,7 @@ def interval_detection_cancel():
 
 
 @app.route('/api/update_plotly_interval/', methods=['GET'])
-def update_plotly_interval():
+def update_plotly_interval() -> Response:
     def update_plotly_interval_all() -> Response:
         global roll_df, json_interval
         logger.info(f"update_plotly_interval_all()")
@@ -279,6 +284,9 @@ def update_plotly_interval():
     def update_plotly_interval_specify(interval_num: int) -> Response:
         global roll_df, json_interval
         logger.info(f"update_plotly_interval_specify({interval_num})")
+
+        # TODO: параметры приходят из веба
+
         data, layout = routine.fill_plotly_interval_specify(roll_df, object_selected, group_selected, interval_num,
                                                             json_interval, params={'leftSpace': 500, 'rightSpace': 500})
         return jsonify(data=data, layout=layout)
@@ -289,6 +297,82 @@ def update_plotly_interval():
 
     logger.info(f"update_plotly_interval({object_selected}, {group_selected}, {interval_selected})")
     return update_plotly_interval_all() if interval_selected == 'all' else update_plotly_interval_specify(int(interval_selected))
+
+
+@app.route('/api/get_signals/', methods=['GET'])
+def get_signals() -> Response:
+    object_selected = request.args.get('objectSelected', type=str)
+    group_selected = request.args.get('groupSelected', type=int)
+    interval_selected = request.args.get('intervalSelected', type=str)
+
+    logger.info(f"get_signals({object_selected}, {group_selected}, {interval_selected})")
+    top_list = json_interval[int(interval_selected)]["top_sensors"]
+    other_list = kks_with_groups.loc[kks_with_groups['group'] == group_selected]['kks'].tolist()
+    # Убираем повторы с топовыми датчиками
+    other_list = list(set(other_list) - set(top_list))
+
+    top_list_descr = kks_with_groups.loc[kks_with_groups['kks'].isin(top_list)]['name'].tolist()
+    other_list_descr = kks_with_groups.loc[kks_with_groups['kks'].isin(other_list)]['name'].tolist()
+
+    return jsonify(top=[{'kks': kks, 'description': descr} for kks, descr in zip(top_list, top_list_descr)],
+                   other=[{'kks': kks, 'description': descr} for kks, descr in zip(other_list, other_list_descr)])
+
+
+@app.route('/api/get_additional_signals/', methods=['GET'])
+def get_additional_signals() -> Response:
+    main_signal_kks = request.args.get('mainSignal', type=str)
+    object_selected = request.args.get('objectSelected', type=str)
+
+    logger.info(f"get_additional_signals({main_signal_kks}, {object_selected})")
+
+    clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
+             (kks_with_groups['kks'] != config[object_selected]['power_index'])
+    clause_for_power_descr = kks_with_groups['kks'] == config[object_selected]['power_index']
+
+    additional_signals = kks_with_groups.loc[clause]['kks'].tolist()[:3]
+    additional_signals_descr = kks_with_groups.loc[clause]['name'].tolist()[:3]
+
+    # Определяем палетту для применения цвета к чекбоксу для дополнительных сигналов
+    logger.info(additional_signals)
+    palette = constants.PALETTE['other'][:len(additional_signals)]
+
+    # Добавляем в начала списков сигнал мощности, его описание и цвет, если он не главный сигнал
+    if main_signal_kks != config[object_selected]['power_index']:
+        additional_signals.insert(0, config[object_selected]['power_index'])
+        additional_signals_descr.insert(0, kks_with_groups.loc[clause_for_power_descr]['name'].values[0])
+        palette.insert(0, constants.PALETTE['power'])
+
+    return jsonify(additionalSignals=[{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
+                                      zip(additional_signals, additional_signals_descr, palette)])
+
+
+@app.route('/api/update_plotly_multiple_axes/', methods=['GET'])
+def update_plotly_multiple_axes() -> Response:
+    global slices_df, json_interval
+    main_signal_kks = request.args.get('mainSignal', type=str)
+    object_selected = request.args.get('objectSelected', type=str)
+    interval_selected = request.args.get('intervalSelected', type=int)
+    signals = request.args.getlist('signals[]')
+    active_signals = request.args.getlist('activeCheckbox[]')
+
+    logger.info(f"update_plotly_multiple_axes({main_signal_kks}, {object_selected}, {interval_selected}, {signals}, {active_signals})")
+
+    signals.insert(0, main_signal_kks)
+
+    if not signals:
+        return jsonify(data=[], layout=[])
+
+    # Упорядочиваем по списку порядок выбора чекбоксов сигнала
+    active_signals = [signal for signal in signals if signal in active_signals]
+
+    # TODO: параметры приходят из веба
+    data, layout = routine.fill_plotly_multi_axes(slices_df, interval_selected,
+                                                  signals, active_signals, json_interval,
+                                                  params={'leftSpace': 500, 'rightSpace': 500,
+                                                          'main_signal': main_signal_kks,
+                                                          'power': config[object_selected]['power_index'],
+                                                          'palette': constants.PALETTE})
+    return jsonify(data=data, layout=layout)
 
 
 def parse_args():
@@ -374,6 +458,8 @@ if __name__ == '__main__':
     # Инициализируем pandas фреймы
     slices_df = pd.read_csv(config_path[init_object]['slices'], parse_dates=['timestamp'], index_col=['timestamp'])
     kks_with_groups = pd.read_csv(config_path[init_object]['kks_with_groups'], sep=';')
+    # Убираем Nan-ы в описании датчиков
+    kks_with_groups['name'].fillna(value='ОПИСАНИЯ НЕТ', inplace=True)
     roll_df = pd.read_csv(os.path.join(config_path[init_object]['roll'], f'roll_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
     loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 

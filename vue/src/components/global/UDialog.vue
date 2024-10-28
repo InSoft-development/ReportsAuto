@@ -40,6 +40,7 @@ export default {
       await initPostProcessing(postProcessing)
     }
 
+    // Отключение элементов диалогового окна
     const dialogElementsDisable = ref(false)
 
     // Параметры пост обработки
@@ -307,12 +308,6 @@ export default {
           </div>
         </div>
       </div>
-<!--      <div>-->
-<!--         <ProgressBar-->
-<!--          :value="percentIntervalDetection"-->
-<!--          v-if="dialogElementsDisable"-->
-<!--        ></ProgressBar>-->
-<!--      </div>-->
       <ConfirmDialog></ConfirmDialog>
     </template>
   </Dialog>

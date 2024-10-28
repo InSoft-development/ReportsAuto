@@ -55,7 +55,7 @@ export default {
     :style="{ 'padding': '0px 20px 0px 20px', 'margin-left': sidebarWidth }"
   >
     <h1 class="text-center">Объект {{ object }}: группа {{ group }}</h1>
-    <TabView :scrollable="true" :active-index="activeIndexTab">
+    <TabView  v-if="currentRoute !== '/addition'" :scrollable="true" :active-index="activeIndexTab">
       <TabPanel
         v-for="interval in intervals"
         :key="interval.title"

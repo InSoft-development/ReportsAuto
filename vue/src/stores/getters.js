@@ -144,3 +144,72 @@ export async function updatePlotlyInterval(
       console.log(error)
     })
 }
+
+
+export async function getTopAndOtherGroupSignals(topGroupSignals, otherGroupSignals, objectSelected, groupSelected, intervalSelected) {
+  let url = URL + 'api/get_signals/'
+
+  await axios
+    .get(url, {
+      params: {
+        objectSelected: objectSelected.value,
+        groupSelected: groupSelected.value,
+        intervalSelected: intervalSelected.value
+      },
+    })
+    .then(res => {
+      topGroupSignals.value = res.data.top
+      otherGroupSignals.value = res.data.other
+    })
+    .catch(error => {
+      console.log(error)
+    })
+}
+
+export async function getAdditionalsSignals(signals, mainSignalRef, objectSelected) {
+  let url = URL + 'api/get_additional_signals/'
+
+  await axios
+    .get(url, {
+      params: {
+        mainSignal: mainSignalRef.value.kks,
+        objectSelected: objectSelected.value
+      },
+    })
+    .then(res => {
+      signals.value = res.data.additionalSignals
+    })
+    .catch(error => {
+      console.log(error)
+    })
+}
+
+export async function updatePlotlyMultipleAxes(
+  data,
+  layout,
+  mainSignalRef,
+  objectSelected,
+  intervalSelected,
+  signals,
+  signalsCheckbox
+) {
+  let url = URL + 'api/update_plotly_multiple_axes/'
+
+  await axios
+    .get(url, {
+      params: {
+        mainSignal: mainSignalRef.value.kks,
+        objectSelected: objectSelected.value,
+        intervalSelected: intervalSelected,
+        signals: signals.value.map(({ kks } ) => kks),
+        activeCheckbox: signalsCheckbox.value
+      },
+    })
+    .then(res => {
+      data.value = res.data.data
+      layout.value = res.data.layout
+    })
+    .catch(error => {
+      console.log(error)
+    })
+}

@@ -171,3 +171,264 @@ def fill_plotly_interval_specify(roll_df: pd.DataFrame, object_selected: str, gr
 
     return data, layout
 
+
+def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: List[str],
+                           active_signals: List[str], json_interval: List[dict],
+                           params: Dict[str, Union[int, str, dict]]) -> Tuple[List[dict], dict]:
+    # Достаем начальные и конечные отсчеты времени и индексы интервалов
+    begin, end = json_interval[interval_num]['time']
+    begin_index, end_index = json_interval[interval_num]['index']
+
+    # Обрабатываем отступы
+    # TODO: параметры приходят из веба
+    left_space = params['leftSpace']
+    right_space = params['rightSpace']
+
+    interval_len = end_index - begin_index
+    if left_space < interval_len < begin_index:
+        left_indentation = interval_len
+    else:
+        if begin_index > left_space:
+            left_indentation = left_space
+        else:
+            left_indentation = 0
+    if (interval_len > right_space) and (end_index < (len(slice_df) - right_space)) \
+            and ((end_index + interval_len) < len(slice_df)):
+        right_indentation = interval_len
+    else:
+        if end_index < (len(slice_df) - right_space):
+            right_indentation = right_space
+        else:
+            right_indentation = 0
+
+    # Заполняем данные графика
+    begin_index -= left_indentation
+    end_index += right_indentation
+
+    # Заполняем объект layout графика
+    fill_data = lambda order, kks: {
+        'x': slice_df.iloc[begin_index:end_index].index.strftime("%Y-%m-%d %H:%M:%S").tolist(),
+        'y': slice_df.iloc[begin_index:end_index][kks].tolist(),
+        'name': kks,
+        'yaxis': f'y{order}',
+        'type': 'scatter',
+    }
+    data = [fill_data(index+1, signal) for index, signal in enumerate(active_signals)]
+
+    layout = {
+        'title': params['main_signal'],
+        'autosize': True,
+        'xaxis': {
+            'type': 'date'
+        },
+        'shapes': [
+            {
+                'type': 'rect',
+                'xref': 'x',
+                'yref': 'paper',
+                'x0': begin,
+                'y0': 0,
+                'x1': end,
+                'y1': 1,
+                'line': {
+                    'width': 1,
+                    'color': 'red',
+                    'layer': 'below'
+                }
+            }
+        ],
+        'showlegend': False
+    }
+
+    active_index = 0
+    other_index = 0
+    if (params['main_signal'] not in active_signals) and (params['power'] in active_signals):
+        for index, signal in enumerate(signals):
+            if signal in active_signals:
+                if signal == params['power']:
+                    data[active_index]['line'] = {
+                        'color': params['palette']['power'],
+                        'width': 1
+                    }
+                    layout[f'yaxis'] = {
+                        'title': {
+                            'text': signal,
+                            'font': {
+                                'color': params['palette']['power'],
+                                'size': 14
+                            }
+                        },
+                        'tickfont': {
+                            'color': params['palette']['power'],
+                            'size': 14
+                        },
+                        'autoshift': True,
+                        'anchor': 'free',
+                        'layer': 'below traces',
+                        'overlaying': 'y2',
+                        'showgrid': True,
+                        'showline': True,
+                        'side': 'right',
+                        'ticks': 'outside',
+                        'tickcolor': 'black',
+                        'title_standoff': 10,
+                        'tickwidth': 0.5,
+                        'zeroline': False,
+                    }
+                else:
+                    if active_index == 1:
+                        data[active_index]['line'] = {
+                            'color': params['palette']['other'][other_index],
+                            'width': 1
+                        }
+                        layout[f'yaxis{active_index+1}'] = {
+                            'title': {
+                                'text': signal,
+                                'font': {
+                                    'color': params['palette']['other'][other_index],
+                                    'size': 14
+                                }
+                            },
+                            'tickfont': {
+                                'color': params['palette']['other'][other_index],
+                                'size': 14
+                            }
+                        }
+                    else:
+                        data[active_index]['line'] = {
+                            'color': params['palette']['other'][other_index],
+                            'width': 1
+                        }
+                        layout[f'yaxis{active_index+1}'] = {
+                            'title': {
+                                'text': signal,
+                                'font': {
+                                    'color': params['palette']['other'][other_index],
+                                    'size': 14
+                                }
+                            },
+                            'tickfont': {
+                                'color': params['palette']['other'][other_index],
+                                'size': 14
+                            },
+                            'autoshift': True,
+                            'anchor': 'free',
+                            'layer': 'below traces',
+                            'overlaying': 'y2',
+                            'showgrid': True,
+                            'showline': True,
+                            'side': 'left',
+                            'ticks': 'outside',
+                            'tickcolor': 'black',
+                            'tickwidth': 0.5,
+                            'zeroline': False
+                        }
+                    other_index += 1
+                active_index += 1
+            if (signal not in active_signals) and (signal != params['main_signal']) and (signal != params['power']):
+                other_index += 1
+    else:
+        for index, signal in enumerate(signals):
+            if signal in active_signals:
+                if signal == params['main_signal']:
+                    data[active_index]['line'] = {
+                        'color': params['palette']['main'],
+                        'width': 1
+                    }
+                    layout[f'yaxis{active_index + 1}'] = {
+                        'title': {
+                            'text': signal,
+                            'font': {
+                                'color': params['palette']['main'],
+                                'size': 14
+                            }
+                        },
+                        'tickfont': {
+                            'color': params['palette']['main'],
+                            'size': 14
+                        }
+                    }
+                elif signal == params['power']:
+                    data[active_index]['line'] = {
+                        'color': params['palette']['power'],
+                        'width': 1
+                    }
+                    layout[f'yaxis{active_index + 1}'] = {
+                        'title': {
+                            'text': signal,
+                            'font': {
+                                'color': params['palette']['power'],
+                                'size': 14
+                            }
+                        },
+                        'tickfont': {
+                            'color': params['palette']['power'],
+                            'size': 14
+                        },
+                        'autoshift': True,
+                        'anchor': 'free',
+                        'layer': 'below traces',
+                        'overlaying': 'y',
+                        'showgrid': True,
+                        'showline': True,
+                        'side': 'right',
+                        'ticks': 'outside',
+                        'tickcolor': 'black',
+                        'title_standoff': 10,
+                        'tickwidth': 0.5,
+                        'zeroline': False,
+                    }
+                else:
+                    if active_index == 0:
+                        data[active_index]['line'] = {
+                            'color': params['palette']['other'][other_index],
+                            'width': 1
+                        }
+                        layout[f'yaxis{active_index + 1}'] = {
+                            'title': {
+                                'text': signal,
+                                'font': {
+                                    'color': params['palette']['other'][other_index],
+                                    'size': 14
+                                }
+                            },
+                            'tickfont': {
+                                'color': params['palette']['other'][other_index],
+                                'size': 14
+                            }
+                        }
+                    else:
+                        data[active_index]['line'] = {
+                            'color': params['palette']['other'][other_index],
+                            'width': 1
+                        }
+                        layout[f'yaxis{active_index + 1}'] = {
+                            'title': {
+                                'text': signal,
+                                'font': {
+                                    'color': params['palette']['other'][other_index],
+                                    'size': 14
+                                }
+                            },
+                            'tickfont': {
+                                'color': params['palette']['other'][other_index],
+                                'size': 14
+                            },
+                            'autoshift': True,
+                            'anchor': 'free',
+                            'layer': 'below traces',
+                            'overlaying': 'y',
+                            'showgrid': True,
+                            'showline': True,
+                            'side': 'left',
+                            'ticks': 'outside',
+                            'tickcolor': 'black',
+                            'tickwidth': 0.5,
+                            'zeroline': False
+                        }
+                    other_index += 1
+                active_index += 1
+            if (signal not in active_signals) and (signal != params['main_signal']) and (signal != params['power']):
+                other_index += 1
+
+    return data, layout

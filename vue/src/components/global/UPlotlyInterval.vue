@@ -21,7 +21,9 @@ export default {
     // Оборачиваем объеты хранилище в реактивные ссылки
     const { object, group, intervals } = storeToRefs(applicationStore)
 
+    // Реактивная ref ссылка на заголовок из пропа
     const headerTitleRef = toRef(props, 'headerTitle')
+    // Реактивная ref ссылка на номер интервала
     const activeIntervalRef = toRef(props, 'activeInterval')
 
     // Показ спинера, если идет получение данных и рендеринг графика
