@@ -124,7 +124,7 @@ export async function updatePlotlyInterval(
   layout,
   objectSelected,
   groupSelected,
-  intervalSelected='all'
+  intervalSelected = 'all',
 ) {
   let url = URL + 'api/update_plotly_interval/'
 
@@ -133,7 +133,7 @@ export async function updatePlotlyInterval(
       params: {
         objectSelected: objectSelected.value,
         groupSelected: groupSelected.value,
-        intervalSelected: intervalSelected
+        intervalSelected: intervalSelected,
       },
     })
     .then(res => {
@@ -145,8 +145,13 @@ export async function updatePlotlyInterval(
     })
 }
 
-
-export async function getTopAndOtherGroupSignals(topGroupSignals, otherGroupSignals, objectSelected, groupSelected, intervalSelected) {
+export async function getTopAndOtherGroupSignals(
+  topGroupSignals,
+  otherGroupSignals,
+  objectSelected,
+  groupSelected,
+  intervalSelected,
+) {
   let url = URL + 'api/get_signals/'
 
   await axios
@@ -154,7 +159,7 @@ export async function getTopAndOtherGroupSignals(topGroupSignals, otherGroupSign
       params: {
         objectSelected: objectSelected.value,
         groupSelected: groupSelected.value,
-        intervalSelected: intervalSelected.value
+        intervalSelected: intervalSelected.value,
       },
     })
     .then(res => {
@@ -166,14 +171,18 @@ export async function getTopAndOtherGroupSignals(topGroupSignals, otherGroupSign
     })
 }
 
-export async function getAdditionalsSignals(signals, mainSignalRef, objectSelected) {
+export async function getAdditionalsSignals(
+  signals,
+  mainSignalRef,
+  objectSelected,
+) {
   let url = URL + 'api/get_additional_signals/'
 
   await axios
     .get(url, {
       params: {
         mainSignal: mainSignalRef.value.kks,
-        objectSelected: objectSelected.value
+        objectSelected: objectSelected.value,
       },
     })
     .then(res => {
@@ -191,7 +200,7 @@ export async function updatePlotlyMultipleAxes(
   objectSelected,
   intervalSelected,
   signals,
-  signalsCheckbox
+  signalsCheckbox,
 ) {
   let url = URL + 'api/update_plotly_multiple_axes/'
 
@@ -201,8 +210,8 @@ export async function updatePlotlyMultipleAxes(
         mainSignal: mainSignalRef.value.kks,
         objectSelected: objectSelected.value,
         intervalSelected: intervalSelected,
-        signals: signals.value.map(({ kks } ) => kks),
-        activeCheckbox: signalsCheckbox.value
+        signals: signals.value.map(({ kks }) => kks),
+        activeCheckbox: signalsCheckbox.value,
       },
     })
     .then(res => {

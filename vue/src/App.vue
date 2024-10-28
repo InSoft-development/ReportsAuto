@@ -47,15 +47,17 @@ export default {
   <header>
     <div class="wrapper"></div>
   </header>
-  <USidebar
-    @redirectToHome="routeToHome"
-  ></USidebar>
+  <USidebar @redirectToHome="routeToHome"></USidebar>
   <div
     v-if="currentRoute !== '/settings'"
-    :style="{ 'padding': '0px 20px 0px 20px', 'margin-left': sidebarWidth }"
+    :style="{ padding: '0px 20px 0px 20px', 'margin-left': sidebarWidth }"
   >
     <h1 class="text-center">Объект {{ object }}: группа {{ group }}</h1>
-    <TabView  v-if="currentRoute !== '/addition'" :scrollable="true" :active-index="activeIndexTab">
+    <TabView
+      v-if="currentRoute !== '/addition'"
+      :scrollable="true"
+      :active-index="activeIndexTab"
+    >
       <TabPanel
         v-for="interval in intervals"
         :key="interval.title"
@@ -93,7 +95,7 @@ export default {
   left: 50%;
   top: 50%;
 }
-.p-tabview-panels{
+.p-tabview-panels {
   display: none;
 }
 </style>

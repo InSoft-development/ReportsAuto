@@ -106,37 +106,20 @@ def fill_plotly_interval_all(roll_df: pd.DataFrame, object_selected: str, group_
 
 
 def fill_plotly_interval_specify(roll_df: pd.DataFrame, object_selected: str, group_selected: int,
-                                 interval_num: int, json_interval: List[dict],
-                                 params: Dict[str, int]) -> Tuple[List[dict], dict]:
+                                 interval_num: int, json_interval: List[dict]) -> Tuple[List[dict], dict]:
     # Достаем начальные и конечные отсчеты времени и индексы интервалов
     begin, end = json_interval[interval_num]['time']
     begin_index, end_index = json_interval[interval_num]['index']
 
-    # Обрабатываем отступы
-    # TODO: параметры приходят из веба
-    left_space = params['leftSpace']
-    right_space = params['rightSpace']
-
     interval_len = end_index - begin_index
-    if left_space < interval_len < begin_index:
-        left_indentation = interval_len
+    if begin_index < interval_len:
+        begin_index = 0
     else:
-        if begin_index > left_space:
-            left_indentation = left_space
-        else:
-            left_indentation = 0
-    if (interval_len > right_space) and (end_index < (len(roll_df) - right_space)) \
-            and ((end_index + interval_len) < len(roll_df)):
-        right_indentation = interval_len
+        begin_index -= interval_len
+    if end_index + interval_len > len(roll_df):
+        end_index = len(roll_df)
     else:
-        if end_index < (len(roll_df) - right_space):
-            right_indentation = right_space
-        else:
-            right_indentation = 0
-
-    # Заполняем данные графика
-    begin_index -= left_indentation
-    end_index += right_indentation
+        end_index += interval_len
 
     data = [{
         'x': roll_df.iloc[begin_index:end_index].index.strftime("%Y-%m-%d %H:%M:%S").tolist(),
@@ -179,31 +162,15 @@ def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: L
     begin, end = json_interval[interval_num]['time']
     begin_index, end_index = json_interval[interval_num]['index']
 
-    # Обрабатываем отступы
-    # TODO: параметры приходят из веба
-    left_space = params['leftSpace']
-    right_space = params['rightSpace']
-
     interval_len = end_index - begin_index
-    if left_space < interval_len < begin_index:
-        left_indentation = interval_len
+    if begin_index < interval_len:
+        begin_index = 0
     else:
-        if begin_index > left_space:
-            left_indentation = left_space
-        else:
-            left_indentation = 0
-    if (interval_len > right_space) and (end_index < (len(slice_df) - right_space)) \
-            and ((end_index + interval_len) < len(slice_df)):
-        right_indentation = interval_len
+        begin_index -= interval_len
+    if end_index + interval_len > len(slice_df):
+        end_index = len(slice_df)
     else:
-        if end_index < (len(slice_df) - right_space):
-            right_indentation = right_space
-        else:
-            right_indentation = 0
-
-    # Заполняем данные графика
-    begin_index -= left_indentation
-    end_index += right_indentation
+        end_index += interval_len
 
     # Заполняем объект layout графика
     fill_data = lambda order, kks: {
@@ -266,7 +233,7 @@ def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: L
                         'anchor': 'free',
                         'layer': 'below traces',
                         'overlaying': 'y2',
-                        'showgrid': True,
+                        'showgrid': False,
                         'showline': True,
                         'side': 'right',
                         'ticks': 'outside',
@@ -315,7 +282,7 @@ def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: L
                             'anchor': 'free',
                             'layer': 'below traces',
                             'overlaying': 'y2',
-                            'showgrid': True,
+                            'showgrid': False,
                             'showline': True,
                             'side': 'left',
                             'ticks': 'outside',
@@ -369,7 +336,7 @@ def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: L
                         'anchor': 'free',
                         'layer': 'below traces',
                         'overlaying': 'y',
-                        'showgrid': True,
+                        'showgrid': False,
                         'showline': True,
                         'side': 'right',
                         'ticks': 'outside',
@@ -418,7 +385,7 @@ def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: L
                             'anchor': 'free',
                             'layer': 'below traces',
                             'overlaying': 'y',
-                            'showgrid': True,
+                            'showgrid': False,
                             'showline': True,
                             'side': 'left',
                             'ticks': 'outside',

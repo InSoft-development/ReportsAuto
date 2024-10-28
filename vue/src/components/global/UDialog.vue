@@ -1,11 +1,24 @@
 <script>
-import { ref, reactive, computed, onMounted, toRef, toRefs, onUnmounted, onBeforeUnmount } from 'vue'
+import {
+  ref,
+  reactive,
+  computed,
+  onMounted,
+  toRef,
+  toRefs,
+  onUnmounted,
+  onBeforeUnmount,
+} from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import { storeToRefs } from 'pinia'
 
 import { useApplicationStore } from '../../stores/applicationStore'
 
-import { initPostProcessing, startIntervalDetection, cancelIntervalDetection } from '../../stores'
+import {
+  initPostProcessing,
+  startIntervalDetection,
+  cancelIntervalDetection,
+} from '../../stores'
 
 import { socket } from '../../socket'
 
@@ -27,7 +40,7 @@ export default {
       // Если уже начали процесс выделения интервалов
       if (dialogElementsDisable.value) {
         await cancelIntervalDetection()
-        return 
+        return
       }
       context.emit('closeDialog')
       // Восстанавливаем значения постобработки, если не стали выделять интервалы
@@ -79,7 +92,7 @@ export default {
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
       // Регистрируем событие закрытия веб-приложения
-      window.addEventListener('beforeunload', async (event) => {
+      window.addEventListener('beforeunload', async event => {
         await cancelIntervalDetection()
       })
       dialogElementsDisable.value = true
@@ -101,7 +114,7 @@ export default {
 
     // Хук, вывываемый перед размонтировкой компонента - закрытие веб-приложения
     onBeforeUnmount(async () => {
-      window.removeEventListener('beforeunload', async (event) => {})
+      window.removeEventListener('beforeunload', async event => {})
     })
 
     // Хук, вызываемый при размонтировки компонента - закрытие веб-приложения
@@ -109,9 +122,8 @@ export default {
       await cancelIntervalDetection()
     })
 
-
     // Прослушка процента выполнения выделения интервалов
-    socket.on('setPercentIntervalDetection', (percents) => {
+    socket.on('setPercentIntervalDetection', percents => {
       percentIntervalDetection.value = percents
     })
 
@@ -296,7 +308,12 @@ export default {
             ></ProgressBar>
           </div>
           <div class="col-2 text-end">
-            <Button label="Отмена" icon="pi pi-times" text @click="closeDialog" />
+            <Button
+              label="Отмена"
+              icon="pi pi-times"
+              text
+              @click="closeDialog"
+            />
           </div>
           <div class="col-6 text-end">
             <Button

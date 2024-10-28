@@ -23,7 +23,7 @@ export default {
     const plotlyConfig = {
       scrollZoom: true,
       displayModeBar: false,
-      responsive: true
+      responsive: true,
     }
     // Ссылка на проп данных для графика для сохранениея реактивности
     const dataRef = toRef(props, 'data')

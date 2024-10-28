@@ -12,15 +12,14 @@ export default {
     // Оборачиваем объеты хранилище в реактивные ссылки
     const { sidebarWidth } = storeToRefs(applicationStore)
     return {
-      sidebarWidth
+      sidebarWidth,
     }
   },
 }
-
 </script>
 
 <template>
-  <div :style="{ 'padding': `0px 20px 0px 20px` }">
+  <div :style="{ padding: `0px 20px 0px 20px` }">
     <UPlotlyInterval
       :headerTitle="'График вероятности наступления аномалии за весь период'"
     ></UPlotlyInterval>

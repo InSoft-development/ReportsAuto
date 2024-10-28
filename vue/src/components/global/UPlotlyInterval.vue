@@ -13,7 +13,7 @@ export default {
   components: { Plotly },
   props: {
     headerTitle: String(),
-    activeInterval: Number()
+    activeInterval: Number(),
   },
   setup(props, context) {
     // Инициализация хранилища pinia
@@ -37,13 +37,25 @@ export default {
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
       loadStateInterval.value = true
-      await updatePlotlyInterval(dataInterval, layoutInterval, object, group, activeIntervalRef.value)
+      await updatePlotlyInterval(
+        dataInterval,
+        layoutInterval,
+        object,
+        group,
+        activeIntervalRef.value,
+      )
       loadStateInterval.value = false
     })
 
     watch([object, group, intervals, activeIntervalRef], async () => {
       loadStateInterval.value = true
-      await updatePlotlyInterval(dataInterval, layoutInterval, object, group, activeIntervalRef.value)
+      await updatePlotlyInterval(
+        dataInterval,
+        layoutInterval,
+        object,
+        group,
+        activeIntervalRef.value,
+      )
       loadStateInterval.value = false
     })
 

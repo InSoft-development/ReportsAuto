@@ -18,7 +18,7 @@ export default {
       description: String,
     },
     idPrefix: String,
-    activeInterval: Number()
+    activeInterval: Number(),
   },
   setup(props, context) {
     // Инициализация хранилища pinia
@@ -52,23 +52,39 @@ export default {
     onMounted(async () => {
       loadStateInterval.value = true
       await getAdditionalsSignals(signals, mainSignalRef, object)
-      signalsCheckbox.value = signals.value.map(({ kks } ) => kks)
+      signalsCheckbox.value = signals.value.map(({ kks }) => kks)
       signalsCheckbox.value.unshift(mainSignalRef.value.kks)
-      await updatePlotlyMultipleAxes(dataMultipleAxes, layoutMultipleAxes, mainSignalRef, object, activeIntervalRef.value, signals, signalsCheckbox)
+      await updatePlotlyMultipleAxes(
+        dataMultipleAxes,
+        layoutMultipleAxes,
+        mainSignalRef,
+        object,
+        activeIntervalRef.value,
+        signals,
+        signalsCheckbox,
+      )
       loadStateInterval.value = false
     })
 
     watch([object, group, intervals], async () => {
       loadStateInterval.value = true
       await getAdditionalsSignals(signals, mainSignalRef, object)
-      signalsCheckbox.value = signals.value.map(({ kks } ) => kks)
+      signalsCheckbox.value = signals.value.map(({ kks }) => kks)
       signalsCheckbox.value.unshift(mainSignalRef.value.kks)
       loadStateInterval.value = false
     })
 
     const changeSignalCheckbox = async () => {
       loadStateInterval.value = true
-      await updatePlotlyMultipleAxes(dataMultipleAxes, layoutMultipleAxes, mainSignalRef, object, activeIntervalRef.value, signals, signalsCheckbox)
+      await updatePlotlyMultipleAxes(
+        dataMultipleAxes,
+        layoutMultipleAxes,
+        mainSignalRef,
+        object,
+        activeIntervalRef.value,
+        signals,
+        signalsCheckbox,
+      )
       loadStateInterval.value = false
     }
 
@@ -82,7 +98,7 @@ export default {
       loadStateInterval,
       dataMultipleAxes,
       layoutMultipleAxes,
-      changeSignalCheckbox
+      changeSignalCheckbox,
     }
   },
 }
@@ -108,26 +124,52 @@ export default {
         </div>
         <div class="row">
           <div class="col-12">
-            <Plotly :data="dataMultipleAxes" :layout="layoutMultipleAxes"></Plotly>
+            <Plotly
+              :data="dataMultipleAxes"
+              :layout="layoutMultipleAxes"
+            ></Plotly>
           </div>
         </div>
       </div>
     </div>
-<!--    <div class="container-fluid interval-multiple-axes-padding-signals">-->
-      <div class="row">
-        <div class="col">
-          <Checkbox v-model="signalsCheckbox" :input-id="idPrefixRef + mainSignalRef.kks + '-Signals'" name="signalsCheckbox" :value="mainSignalRef.kks" @change="changeSignalCheckbox"></Checkbox>
-          <label :for="idPrefixRef + mainSignalRef.kks +'-Signals'">Основной сигнал: <span class="plotly-interval-header-title">{{ mainSignalRef.kks + ' (' + mainSignalRef.description + ')'}}</span></label>
-        </div>
+    <!--    <div class="container-fluid interval-multiple-axes-padding-signals">-->
+    <div class="row">
+      <div class="col">
+        <Checkbox
+          v-model="signalsCheckbox"
+          :input-id="idPrefixRef + mainSignalRef.kks + '-Signals'"
+          name="signalsCheckbox"
+          :value="mainSignalRef.kks"
+          @change="changeSignalCheckbox"
+        ></Checkbox>
+        <label :for="idPrefixRef + mainSignalRef.kks + '-Signals'"
+          >Основной сигнал:
+          <span class="plotly-interval-header-title">{{
+            mainSignalRef.kks + ' (' + mainSignalRef.description + ')'
+          }}</span></label
+        >
       </div>
-      <div class="row" v-for="signal in signals">
-        <div class="col">
-            <Checkbox v-model="signalsCheckbox" :input-id="idPrefixRef + signal.kks +'-Signals'" name="signalsCheckbox" :value="signal.kks" @change="changeSignalCheckbox"></Checkbox>
-            <label :for="idPrefixRef + signal.kks + '-Signals'">Дополнительный сигнал: <span :style="{ color: signal.color }">{{ signal.kks + ' (' + signal.description + ')'}}</span></label></div>
-        </div>
     </div>
-    <br />
-<!--  </div>-->
+    <div class="row" v-for="signal in signals">
+      <div class="col">
+        <Checkbox
+          v-model="signalsCheckbox"
+          :input-id="idPrefixRef + signal.kks + '-Signals'"
+          name="signalsCheckbox"
+          :value="signal.kks"
+          @change="changeSignalCheckbox"
+        ></Checkbox>
+        <label :for="idPrefixRef + signal.kks + '-Signals'"
+          >Дополнительный сигнал:
+          <span :style="{ color: signal.color }">{{
+            signal.kks + ' (' + signal.description + ')'
+          }}</span></label
+        >
+      </div>
+    </div>
+  </div>
+  <br />
+  <!--  </div>-->
 </template>
 
 <style>

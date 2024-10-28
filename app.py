@@ -111,14 +111,6 @@ def init_sidebar() -> Response:
     roll_df = pd.read_csv(os.path.join(config_path[init_object]['roll'], f'roll_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
     loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
-    # init_objects = list(config_path.keys())
-    # init_object = init_objects[0]
-    # init_group = 0
-    # init_groups = config[init_object]['count_of_groups']
-    # with open(os.path.join(config_path[init_object]['json_interval'], f'group_{init_group}.json'), 'r') as read_file:
-    #     init_json_interval = json.load(read_file)
-    # init_intervals = [record['time'] for record in init_json_interval]
-
     return jsonify(object=init_object, objects=init_objects, group=init_group, groups=init_groups,
                    intervals=init_intervals)
 
@@ -284,11 +276,8 @@ def update_plotly_interval() -> Response:
     def update_plotly_interval_specify(interval_num: int) -> Response:
         global roll_df, json_interval
         logger.info(f"update_plotly_interval_specify({interval_num})")
-
-        # TODO: параметры приходят из веба
-
         data, layout = routine.fill_plotly_interval_specify(roll_df, object_selected, group_selected, interval_num,
-                                                            json_interval, params={'leftSpace': 500, 'rightSpace': 500})
+                                                            json_interval)
         return jsonify(data=data, layout=layout)
 
     object_selected = request.args.get('objectSelected', type=str)
@@ -333,7 +322,6 @@ def get_additional_signals() -> Response:
     additional_signals_descr = kks_with_groups.loc[clause]['name'].tolist()[:3]
 
     # Определяем палетту для применения цвета к чекбоксу для дополнительных сигналов
-    logger.info(additional_signals)
     palette = constants.PALETTE['other'][:len(additional_signals)]
 
     # Добавляем в начала списков сигнал мощности, его описание и цвет, если он не главный сигнал
@@ -364,14 +352,12 @@ def update_plotly_multiple_axes() -> Response:
 
     # Упорядочиваем по списку порядок выбора чекбоксов сигнала
     active_signals = [signal for signal in signals if signal in active_signals]
-
-    # TODO: параметры приходят из веба
     data, layout = routine.fill_plotly_multi_axes(slices_df, interval_selected,
                                                   signals, active_signals, json_interval,
-                                                  params={'leftSpace': 500, 'rightSpace': 500,
-                                                          'main_signal': main_signal_kks,
-                                                          'power': config[object_selected]['power_index'],
-                                                          'palette': constants.PALETTE})
+                                                  params={
+                                                      'main_signal': main_signal_kks,
+                                                      'power': config[object_selected]['power_index'],
+                                                      'palette': constants.PALETTE})
     return jsonify(data=data, layout=layout)
 
 

@@ -19,7 +19,8 @@ export default {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { loadStateSidebar, collapsed, sidebarWidth } = storeToRefs(applicationStore)
+    const { loadStateSidebar, collapsed, sidebarWidth } =
+      storeToRefs(applicationStore)
     // Меню sidebar
     const sidebarMenu = ref([])
 

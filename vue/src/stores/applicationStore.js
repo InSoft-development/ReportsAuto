@@ -10,7 +10,7 @@ export const useApplicationStore = defineStore('ApplicationStore', () => {
   const sidebarWidthUncollapsed = '400px'
   const sidebarWidthCollapsed = '65px'
   const sidebarWidth = computed(() => {
-      return collapsed.value ? sidebarWidthCollapsed : sidebarWidthUncollapsed
+    return collapsed.value ? sidebarWidthCollapsed : sidebarWidthUncollapsed
   })
   const loadStateSidebar = ref(false)
 
