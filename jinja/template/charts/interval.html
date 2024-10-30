@@ -1,0 +1,35 @@
+<div>
+    <h3 class="plotly-interval-header-title">{{ chart["header"] }}</h3>
+    <div class="card d-flex align-items-center justify-content-center">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col">
+              <div id="interval-chart-{{ chart["id"] }}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<script>
+    const plotlyConfig{{ chart["variablePostfix"] }} = {
+      scrollZoom: true,
+      displayModeBar: false,
+      responsive: true
+    }
+
+    const data{{ chart["variablePostfix"] }} = {{ chart["data"] }}
+
+    const layout{{ chart["variablePostfix"] }} = {{ chart["layout"] }}
+
+    Plotly.newPlot("interval-chart-{{ chart["id"] }}",
+        data{{ chart["variablePostfix"] }}, layout{{ chart["variablePostfix"] }},
+    plotlyConfig{{ chart["variablePostfix"] }})
+</script>
+
+<style>
+.plotly-interval-header-title {
+  color: #1f77b4;
+  text-align: center;
+}
+</style>

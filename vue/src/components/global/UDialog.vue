@@ -68,6 +68,7 @@ export default {
       thresholdShort: Number(),
     })
 
+    // Процент выделения интервалов
     const percentIntervalDetection = ref(0)
 
     // Диалоговое окно подтверждения выделения интервалов
@@ -89,6 +90,17 @@ export default {
       })
     }
 
+    // Запуск выделения интервалов
+    const startInterval = async () => {
+      percentIntervalDetection.value = 0
+      dialogElementsDisable.value = true
+      await startIntervalDetection(postProcessing)
+      // Инициализируем диалоговое окно постобработки сохраненными значениями
+      // await initPostProcessing(postProcessing)
+      await redirectAfterIntervalDetection()
+      dialogElementsDisable.value = false
+    }
+
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
       // Регистрируем событие закрытия веб-приложения
@@ -100,17 +112,6 @@ export default {
       await initPostProcessing(postProcessing)
       dialogElementsDisable.value = false
     })
-
-    // Запуск выделения интервалов
-    const startInterval = async () => {
-      percentIntervalDetection.value = 0
-      dialogElementsDisable.value = true
-      await startIntervalDetection(postProcessing)
-      // Инициализируем диалоговое окно постобработки сохраненными значениями
-      // await initPostProcessing(postProcessing)
-      await redirectAfterIntervalDetection()
-      dialogElementsDisable.value = false
-    }
 
     // Хук, вывываемый перед размонтировкой компонента - закрытие веб-приложения
     onBeforeUnmount(async () => {
@@ -184,7 +185,7 @@ export default {
               :disabled="dialogElementsDisable"
             />
             <label for="post-processing-count-top"
-              >Количество датчиков, внесших максимальный вклад</label
+              >Датчики, внесшие максимальный вклад</label
             >
           </FloatLabel>
         </div>

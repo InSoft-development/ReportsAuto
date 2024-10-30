@@ -70,6 +70,57 @@ def backup_recovery(config_path: str, config: dict, src_backup: str, dest_recove
     return config
 
 
+def define_additional_signals(kks_with_groups: pd.DataFrame,
+                              main_signal_kks: str, power_kks: str,
+                              palette_power: str, palette_other: List[str]) -> List[Dict[str, str]]:
+    clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
+             (kks_with_groups['kks'] != power_kks)
+    clause_for_power_descr = kks_with_groups['kks'] == power_kks
+
+    additional_signals = kks_with_groups.loc[clause]['kks'].tolist()[:3]
+    additional_signals_descr = kks_with_groups.loc[clause]['name'].tolist()[:3]
+
+    # Определяем палетту для применения цвета к чекбоксу для дополнительных сигналов
+    palette = palette_other[:len(additional_signals)]
+
+    # Добавляем в начала списков сигнал мощности, его описание и цвет, если он не главный сигнал
+    if main_signal_kks != power_kks:
+        additional_signals.insert(0, power_kks)
+        additional_signals_descr.insert(0, kks_with_groups.loc[clause_for_power_descr]['name'].values[0])
+        palette.insert(0, palette_power)
+
+    return [{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
+            zip(additional_signals, additional_signals_descr, palette)]
+
+
+def define_signals(kks_with_groups: pd.DataFrame, main_signal_kks: str, power_kks: str,
+                   palette_main: str, palette_power: str, palette_other: List[str]) -> List[Dict[str, str]]:
+    clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
+             (kks_with_groups['kks'] != power_kks)
+    clause_for_power_descr = kks_with_groups['kks'] == power_kks
+    clause_for_main = kks_with_groups['kks'] == main_signal_kks
+
+    signals = kks_with_groups.loc[clause]['kks'].tolist()[:3]
+    signals_descr = kks_with_groups.loc[clause]['name'].tolist()[:3]
+
+    # Определяем палетту для применения цвета к чекбоксу для дополнительных сигналов
+    palette = palette_other[:len(signals)]
+
+    # Добавляем в начала списков сигнал мощности, его описание и цвет, если он не главный сигнал
+    if main_signal_kks != power_kks:
+        signals.insert(0, power_kks)
+        signals_descr.insert(0, kks_with_groups.loc[clause_for_power_descr]['name'].values[0])
+        palette.insert(0, palette_power)
+
+    signals.insert(0, main_signal_kks)
+    signals_descr.insert(0, kks_with_groups.loc[clause_for_main]['name'].values[0])
+    palette.insert(0, palette_main)
+    logger.info(signals)
+
+    return [{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
+            zip(signals, signals_descr, palette)]
+
+
 def fill_plotly_interval_all(roll_df: pd.DataFrame, object_selected: str, group_selected: int,
                              json_interval: List[dict]) -> Tuple[List[dict], dict]:
     data = [{

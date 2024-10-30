@@ -22,12 +22,20 @@ def application_structure() -> bool:
     :return: True/False результат проверки структуры веб-приложения
     """
     logger.info(f"application_structure()")
-    try:
-        os.mkdir(f'{constants.OBJECTS}')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            logger.error(e)
-            return False
+
+    dir_list = [constants.OBJECTS,
+                constants.STATIC_DIRECTORY, constants.STATIC_BOOTSTRAP_CSS_DIRECTORY,
+                constants.STATIC_BOOTSTRAP_JS_DIRECTORY, constants.STATIC_PLOTLY_JS_DIRECTORY,
+                constants.JINJA, constants.JINJA_PYLIB, constants.JINJA_TEMPLATE,
+                constants.JINJA_TEMPLATE_CHARTS, constants.JINJA_TEMPLATE_REPORTS, constants.JINJA_TEMPLATE_SOURCE]
+
+    for directory in dir_list:
+        try:
+            os.mkdir(directory)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                logger.error(e)
+                return False
 
     return True
 
@@ -40,29 +48,15 @@ def application_experiment_structure(object_path: str) -> None:
     """
     logger.info(f"application_experiment_structure({object_path})")
 
-    try:
-        os.mkdir(f'{object_path}{constants.DATA_DIRECTORY}')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            logger.error(e)
+    dir_list = [f'{object_path}{constants.DATA_DIRECTORY}', f'{object_path}{constants.DATA_CSV_ROLLED}',
+                f'{object_path}{constants.DATA_JSON_INTERVAL}', f'{object_path}{constants.REPORTS_DIRECTORY}']
 
-    try:
-        os.mkdir(f'{object_path}{constants.DATA_CSV_ROLLED}')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            logger.error(e)
-
-    try:
-        os.mkdir(f'{object_path}{constants.DATA_JSON_INTERVAL}')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            logger.error(e)
-
-    try:
-        os.mkdir(f'{object_path}{constants.REPORTS_DIRECTORY}')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            logger.error(e)
+    for directory in dir_list:
+        try:
+            os.mkdir(directory)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                logger.error(e)
 
 
 def application_deploy(path: str) -> dict:

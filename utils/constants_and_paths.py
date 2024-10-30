@@ -13,14 +13,23 @@ DATA_CSV_ROLLED = f'{DATA_DIRECTORY}csv_roll{os.sep}'
 DATA_JSON_INTERVAL = f'{DATA_DIRECTORY}json_interval{os.sep}'
 
 JINJA = f'jinja{os.sep}'
+
+JINJA_PYLIB = f'{JINJA}pylib{os.sep}'
+
 JINJA_TEMPLATE = f'{JINJA}template{os.sep}'
+
+JINJA_TEMPLATE_CHARTS = f'{JINJA_TEMPLATE}charts{os.sep}'
+JINJA_TEMPLATE_CHARTS_INTERVAL = f'{JINJA_TEMPLATE_CHARTS}interval.html'
+
+JINJA_TEMPLATE_REPORTS = f'{JINJA_TEMPLATE}reports{os.sep}'
+JINJA_TEMPLATE_REPORTS_COMMON = f'{JINJA_TEMPLATE_REPORTS}common_report.html'
+JINJA_TEMPLATE_REPORTS_INTERVAL = f'{JINJA_TEMPLATE_REPORTS}interval_report.html'
+JINJA_TEMPLATE_REPORTS_PREAMBLE = f'{JINJA_TEMPLATE_REPORTS}preamble.html'
 
 JINJA_TEMPLATE_SOURCE = f'{JINJA_TEMPLATE}source{os.sep}'
 JINJA_TEMPLATE_SOURCE_HEADER = f'{JINJA_TEMPLATE_SOURCE}header.html'
 JINJA_TEMPLATE_SOURCE_TEMPLATE = f'{JINJA_TEMPLATE_SOURCE}template.html'
 JINJA_TEMPLATE_SOURCE_FOOTER = f'{JINJA_TEMPLATE_SOURCE}footer.html'
-
-JINJA_PYLIB = f'{JINJA}pylib{os.sep}'
 
 OBJECTS = f'objects{os.sep}'
 OBJECTS_BACKUP = f'objects_backup{os.sep}'
@@ -33,6 +42,11 @@ PALETTE = {
 
 REPORTS_DIRECTORY = f'reports{os.sep}'
 # REPORTS_DIRECTORY_PERIODS = f'{REPORTS_DIRECTORY}periods{os.sep}'
+
+STATIC_DIRECTORY = f'static{os.sep}'
+STATIC_BOOTSTRAP_CSS_DIRECTORY = f'{STATIC_DIRECTORY}bootstrap{os.sep}dist{os.sep}css{os.sep}'
+STATIC_BOOTSTRAP_JS_DIRECTORY = f'{STATIC_DIRECTORY}bootstrap{os.sep}dist{os.sep}js{os.sep}'
+STATIC_PLOTLY_JS_DIRECTORY = f'{STATIC_DIRECTORY}plotly.js-dist{os.sep}'
 
 WEB_DIR = f'web{os.sep}'
 WEB_DIR_ASSETS = f'{WEB_DIR}assets{os.sep}'

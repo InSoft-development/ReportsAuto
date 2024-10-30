@@ -26,6 +26,8 @@ import utils.constants_and_paths as constants
 import utils.correct_deploy as deploy
 import utils.routine_operations as routine
 
+import jinja.pylib.get_template as template
+
 from loguru import logger
 import gevent
 
@@ -95,6 +97,47 @@ def catch_all(path):
 @app.route('/api_urls.js')
 def get_api_urls_js():
     return send_file('./web/api_urls.js')
+
+
+@app.route('/bootstrap/dist/css/bootstrap.min.css')
+def get_bootstrap_css():
+    """
+    Функция запроса файла bootstrap.css
+    :return: Возвращает файл bootstrap.css в header html
+    """
+    logger.info(f"get_bootstrap_css()")
+    logger.info(f"get style {constants.STATIC_BOOTSTRAP_CSS_DIRECTORY}bootstrap.css")
+    return send_from_directory(constants.STATIC_BOOTSTRAP_CSS_DIRECTORY, 'bootstrap.min.css')
+
+
+@app.route('/bootstrap/dist/js/bootstrap.bundle.min.js')
+def get_bootstrap_js():
+    """
+    Функция запроса скрипта bootstrap.bundle.min.js
+    :return: Возвращает скрипт bootstrap.bundle.min.js в html
+    """
+    logger.info(f"get_bootstrap_js()")
+    logger.info(f"get script {constants.STATIC_BOOTSTRAP_JS_DIRECTORY}bootstrap.bundle.min.js")
+    return send_from_directory(constants.STATIC_BOOTSTRAP_JS_DIRECTORY, 'bootstrap.bundle.min.js')
+
+
+@app.route('/plotly.js-dist-min/plotly.js')
+def get_plotly_js():
+    """
+    Функция запроса скрипта plotly.min.js
+    :return: Возвращает скрипт plotly.min.js в html
+    """
+    logger.info(f"get_plotly_js()")
+    logger.info(f"get script {constants.STATIC_PLOTLY_JS_DIRECTORY}plotly.js")
+    return send_from_directory(constants.STATIC_PLOTLY_JS_DIRECTORY, 'plotly.js')
+
+
+@app.route("/common_report.html")
+def get_common_report_html():
+    logger.info("get_common_report_html()")
+    object_selected = request.args.get('objectSelected', type=str)
+    return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
+                                  f"common_report_{object_selected}.html"))
 
 
 @app.route('/api/init_sidebar/', methods=['GET'])
@@ -172,7 +215,7 @@ def init_post_processing() -> Response:
 
 @socketio.on('/api/interval_detection/')
 # @app.route('/api/interval_detection/', methods=['POST'])
-def interval_detection(post_processing) -> Dict[str, str]:
+def interval_detection(post_processing: dict) -> Dict[str, str]:
     global config, config_backup, p_get_interval, sid_proc
     sid = request.sid
     if p_get_interval is not None:
@@ -314,24 +357,30 @@ def get_additional_signals() -> Response:
 
     logger.info(f"get_additional_signals({main_signal_kks}, {object_selected})")
 
-    clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
-             (kks_with_groups['kks'] != config[object_selected]['power_index'])
-    clause_for_power_descr = kks_with_groups['kks'] == config[object_selected]['power_index']
+    # clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
+    #          (kks_with_groups['kks'] != config[object_selected]['power_index'])
+    # clause_for_power_descr = kks_with_groups['kks'] == config[object_selected]['power_index']
+    #
+    # additional_signals = kks_with_groups.loc[clause]['kks'].tolist()[:3]
+    # additional_signals_descr = kks_with_groups.loc[clause]['name'].tolist()[:3]
+    #
+    # # Определяем палетту для применения цвета к чекбоксу для дополнительных сигналов
+    # palette = constants.PALETTE['other'][:len(additional_signals)]
+    #
+    # # Добавляем в начала списков сигнал мощности, его описание и цвет, если он не главный сигнал
+    # if main_signal_kks != config[object_selected]['power_index']:
+    #     additional_signals.insert(0, config[object_selected]['power_index'])
+    #     additional_signals_descr.insert(0, kks_with_groups.loc[clause_for_power_descr]['name'].values[0])
+    #     palette.insert(0, constants.PALETTE['power'])
 
-    additional_signals = kks_with_groups.loc[clause]['kks'].tolist()[:3]
-    additional_signals_descr = kks_with_groups.loc[clause]['name'].tolist()[:3]
+    # return jsonify(additionalSignals=[{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
+    #                                   zip(additional_signals, additional_signals_descr, palette)])
 
-    # Определяем палетту для применения цвета к чекбоксу для дополнительных сигналов
-    palette = constants.PALETTE['other'][:len(additional_signals)]
-
-    # Добавляем в начала списков сигнал мощности, его описание и цвет, если он не главный сигнал
-    if main_signal_kks != config[object_selected]['power_index']:
-        additional_signals.insert(0, config[object_selected]['power_index'])
-        additional_signals_descr.insert(0, kks_with_groups.loc[clause_for_power_descr]['name'].values[0])
-        palette.insert(0, constants.PALETTE['power'])
-
-    return jsonify(additionalSignals=[{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
-                                      zip(additional_signals, additional_signals_descr, palette)])
+    return jsonify(additionalSignals=routine.define_additional_signals(kks_with_groups,
+                                                                       main_signal_kks,
+                                                                       config[object_selected]['power_index'],
+                                                                       constants.PALETTE['power'],
+                                                                       constants.PALETTE['other']))
 
 
 @app.route('/api/update_plotly_multiple_axes/', methods=['GET'])
@@ -359,6 +408,25 @@ def update_plotly_multiple_axes() -> Response:
                                                       'power': config[object_selected]['power_index'],
                                                       'palette': constants.PALETTE})
     return jsonify(data=data, layout=layout)
+
+
+@socketio.on('/api/common_report/')
+def common_report(object_selected: str, group_selected: int) -> Dict[str, str]:
+    global slices_df, roll_df, kks_with_groups
+    sid = request.sid
+    logger.info(f"common_report({object_selected}, {group_selected})")
+
+    params = {
+        'url': f"http://{args.host}:{args.port}/",
+        'sid': sid,
+        'object': object_selected,
+        'group': group_selected,
+        'interval': json_interval,
+        'power': config[object_selected]['power_index'],
+        'palette': constants.PALETTE
+    }
+
+    return template.get_render_common_report(socketio, slices_df, roll_df, kks_with_groups, params)
 
 
 def parse_args():

@@ -1,0 +1,20 @@
+{% include "preamble.html" %}
+{{ main_chart }}
+{% if intervals %}
+<h3 class="common-report-header">Найденные аномальные интервалы</h3>
+{% endif %}
+<div class="container-fluid">
+    {% for interval in intervals %}
+    <div class="row">
+        <div class="col">{{ loop.index }}) {{ interval[0] }} -- {{ interval[1] }}</div>
+    </div>
+    {% endfor %}
+</div>
+{{ interval_report }}
+
+
+<style>
+.common-report-header {
+    color: #1f77b4;
+}
+</style>

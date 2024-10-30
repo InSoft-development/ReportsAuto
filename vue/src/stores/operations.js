@@ -4,7 +4,6 @@ import { socket } from '../socket'
 const URL = window.api.url
 
 export async function startIntervalDetection(postProcessing) {
-  // let url = URL + 'api/interval_detection/'
   await new Promise(resolve => {
     socket.emit('/api/interval_detection/', postProcessing.value, res => {
       if ('causeException' in res) {
@@ -26,33 +25,9 @@ export async function startIntervalDetection(postProcessing) {
       resolve(res)
     })
   })
-  // await axios
-  //   .post(url, postProcessing.value, {
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //   })
-  //   .then(res => {
-  //     if ('causeException' in res.data) {
-  //       if (res.data.status === "success") {
-  //         console.log(res.data.causeException)
-  //         return
-  //       }
-  //       if (res.data.status === "error") {
-  //         console.error(res.data.causeException)
-  //         alert(res.data.causeException + "\nВосстановлен предыдущий конфиг и фреймы")
-  //         return
-  //       }
-  //     }
-  //     if (res.data.status === "success") console.log("Интервалы выделены")
-  //   })
-  //   .catch(error => {
-  //     console.log(error)
-  //   })
 }
 
 export async function cancelIntervalDetection() {
-  // let url = URL + 'api/cancel_interval_detection/'
   await new Promise(resolve => {
     socket.emit('/api/cancel_interval_detection/', res => {
       if (res.status === 'success') console.log('Отмена выделения интервалов')
@@ -60,12 +35,13 @@ export async function cancelIntervalDetection() {
       resolve(res)
     })
   })
-  // await axios
-  //   .post(url)
-  //   .then(res => {
-  //     if (res.data.status === "success") console.log("Отмена выделения инетрвалов")
-  //   })
-  //   .catch(error => {
-  //     console.log(error)
-  //   })
+}
+
+export async function startCommonReport(objectSelected, groupSelected) {
+  await new Promise(resolve => {
+    socket.emit('/api/common_report/', objectSelected.value, groupSelected.value, res => {
+      console.log(res)
+      resolve(res)
+    })
+  })
 }

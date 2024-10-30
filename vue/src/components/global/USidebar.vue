@@ -7,7 +7,10 @@ import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
 
 import { useApplicationStore } from '../../stores/applicationStore'
 
-import { initSidebar, updateSidebar } from '../../stores'
+import { initSidebar, updateSidebar, startCommonReport } from '../../stores'
+
+import { socket } from '../../socket'
+import axios from 'axios'
 
 export default {
   name: 'USidebar',
@@ -67,6 +70,45 @@ export default {
       loadStateSidebar.value = false
     }
 
+    // Процент построения отчета по всем периодам
+    const percentCommonReport = ref(0)
+    // Флаг показа ProgressBar
+    const commonReportActive = ref(false)
+
+    const onCommonReportButtonClick = async () => {
+      percentCommonReport.value = 0
+      loadStateSidebar.value = true
+      commonReportActive.value = true
+      await startCommonReport(objectSelected, groupSelected)
+      commonReportActive.value = false
+      loadStateSidebar.value = false
+
+      // Загрузка файла
+      const URL = window.api.url
+      const linkCommonReport = document.createElement('a')
+      linkCommonReport.download = 'common_report.html'
+
+    //   await axios
+    // .get(url, {
+    //   params: {
+    //     objectSelected: objectSelected.value,
+    //     groupSelected: groupSelected.value,
+    //     cause: cause,
+    //   },
+    // })
+
+      await axios
+        .get(URL+'/common_report.html', {params: {objectSelected: objectSelected.value,}})
+        .then((res) => {
+          linkCommonReport.href = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html'}))
+          linkCommonReport.click()
+          linkCommonReport.remove()
+          window.URL.revokeObjectURL(linkCommonReport.href)
+        })
+        .catch(error => {
+          console.log(error)})
+    }
+
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
       loadStateSidebar.value = true
@@ -79,6 +121,11 @@ export default {
         sidebarMenu,
       )
       loadStateSidebar.value = false
+    })
+
+    // Прослушка процента выполнения выделения интервалов
+    socket.on('setPercentCommonReport', percents => {
+      percentCommonReport.value = percents
     })
 
     return {
@@ -94,6 +141,9 @@ export default {
       dialogActive,
       onDialogButtonClick,
       onRedirectAfterIntervalDetection,
+      percentCommonReport,
+      commonReportActive,
+      onCommonReportButtonClick
     }
   },
 }
@@ -139,13 +189,13 @@ export default {
       </div>
       <div class="sidebar-div-button">
         <div class="sidebar-button-wrapper">
-          <Button class="sidebar-button" :disabled="loadStateSidebar"
+          <Button class="sidebar-button" @click="onCommonReportButtonClick" :disabled="loadStateSidebar"
             >PDF</Button
           >
         </div>
-        <!--      <div v-if="progressBarActive">-->
-        <!--        <ProgressBar class="col-10 align-self-center" :value="progressBarValue"></ProgressBar>-->
-        <!--      </div>-->
+        <div v-if="commonReportActive">
+          <ProgressBar class="col-10 align-self-center" :value="percentCommonReport"></ProgressBar>
+        </div>
       </div>
       <div class="sidebar-div-button">
         <div class="sidebar-button-wrapper">
