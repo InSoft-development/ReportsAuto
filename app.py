@@ -31,7 +31,7 @@ import jinja.pylib.get_template as template
 from loguru import logger
 import gevent
 
-from typing import Dict
+from typing import Dict, List
 
 VERSION = '1.0.0'
 
@@ -140,6 +140,16 @@ def get_common_report_html():
                                   f"common_report_{object_selected}.html"))
 
 
+@app.route("/interval_report.html")
+def get_interval_report_html():
+    logger.info("get_interval_report_html()")
+    object_selected = request.args.get('objectSelected', type=str)
+    group_selected = request.args.get('groupSelected', type=int)
+    active_interval = request.args.get('activeInterval', type=int)
+    return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
+                                  f"interval_report_{active_interval}.html"))
+
+
 @app.route('/api/init_sidebar/', methods=['GET'])
 def init_sidebar() -> Response:
     global slices_df, kks_with_groups, roll_df, loss_df, json_interval
@@ -214,7 +224,6 @@ def init_post_processing() -> Response:
 
 
 @socketio.on('/api/interval_detection/')
-# @app.route('/api/interval_detection/', methods=['POST'])
 def interval_detection(post_processing: dict) -> Dict[str, str]:
     global config, config_backup, p_get_interval, sid_proc
     sid = request.sid
@@ -427,6 +436,37 @@ def common_report(object_selected: str, group_selected: int) -> Dict[str, str]:
     }
 
     return template.get_render_common_report(socketio, slices_df, roll_df, kks_with_groups, params)
+
+
+@socketio.on('/api/interval_report/')
+def interval_report(object_selected: str, group_selected: int, interval_selected: int,
+                    tops_order: List[str], others_order: List[str], active_signals: Dict[str, Dict[str, List[str]]]) -> Dict[str, str]:
+    global slices_df, roll_df, kks_with_groups
+    sid = request.sid
+    logger.info(f"interval_report({object_selected}, {group_selected}, {interval_selected}, "
+                f"{tops_order}, {others_order}, {active_signals})")
+
+    params = {
+        'url': f"http://{args.host}:{args.port}/",
+        'sid': sid,
+        'object': object_selected,
+        'group': group_selected,
+        'interval': json_interval,
+        'interval_num': interval_selected,
+        'power': config[object_selected]['power_index'],
+        'palette': constants.PALETTE
+    }
+
+    # Упорядочивание по списку многоосевых графиков
+    active_signals_order = {
+        "top": {top: active_signals["top"][top] for top in tops_order if top in active_signals["top"].keys()},
+        "other": {other: active_signals["other"][other] for other in others_order if other in active_signals["other"].keys()}
+    }
+
+    logger.info(active_signals_order)
+    return template.get_render_interval_report(socketio, slices_df, roll_df, kks_with_groups,
+                                               active_signals_order["top"], active_signals_order["other"],
+                                               params)
 
 
 def parse_args():

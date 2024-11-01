@@ -79,34 +79,28 @@ export default {
       percentCommonReport.value = 0
       loadStateSidebar.value = true
       commonReportActive.value = true
-      await startCommonReport(objectSelected, groupSelected)
+      let status = await startCommonReport(objectSelected, groupSelected)
+      if (status !== 'error'){
+        // Загрузка файла
+        const URL = window.api.url
+        const linkCommonReport = document.createElement('a')
+        linkCommonReport.download = `common_report_${objectSelected.value}_group_${groupSelected.value}.html`
+
+        await axios
+          .get(URL+'/common_report.html', {params: {objectSelected: objectSelected.value,}})
+          .then((res) => {
+            linkCommonReport.href = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html'}))
+            linkCommonReport.click()
+            linkCommonReport.remove()
+            window.URL.revokeObjectURL(linkCommonReport.href)
+          })
+          .catch(error => {
+            console.log(error)})
+      }
+      percentCommonReport.value = 100
       commonReportActive.value = false
+
       loadStateSidebar.value = false
-
-      // Загрузка файла
-      const URL = window.api.url
-      const linkCommonReport = document.createElement('a')
-      linkCommonReport.download = 'common_report.html'
-
-    //   await axios
-    // .get(url, {
-    //   params: {
-    //     objectSelected: objectSelected.value,
-    //     groupSelected: groupSelected.value,
-    //     cause: cause,
-    //   },
-    // })
-
-      await axios
-        .get(URL+'/common_report.html', {params: {objectSelected: objectSelected.value,}})
-        .then((res) => {
-          linkCommonReport.href = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html'}))
-          linkCommonReport.click()
-          linkCommonReport.remove()
-          window.URL.revokeObjectURL(linkCommonReport.href)
-        })
-        .catch(error => {
-          console.log(error)})
     }
 
     // Хук, вызываемый после монтажа компонента для его инициализации
@@ -123,7 +117,7 @@ export default {
       loadStateSidebar.value = false
     })
 
-    // Прослушка процента выполнения выделения интервалов
+    // Прослушка процента выполнения построения отчета
     socket.on('setPercentCommonReport', percents => {
       percentCommonReport.value = percents
     })

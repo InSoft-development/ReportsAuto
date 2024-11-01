@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, computed, onMounted, toRef, toRefs, watch } from 'vue'
+import { ref, onMounted, toRef, watch, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { useApplicationStore } from '../../stores/applicationStore'
@@ -17,12 +17,15 @@ export default {
       kks: String,
       description: String,
     },
+    typeOfMainSignal: String,
     idPrefix: String,
     activeInterval: Number(),
+    disabled: Boolean,
   },
   setup(props, context) {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
+    const { activeSignals, setActiveSignals } = applicationStore
     // Оборачиваем объеты хранилище в реактивные ссылки
     const { object, group, intervals } = storeToRefs(applicationStore)
 
@@ -30,10 +33,14 @@ export default {
     const headerTitleRef = toRef(props, 'headerTitle')
     // Реактивная ref ссылка на объект главного сигнала
     const mainSignalRef = toRef(props, 'mainSignal')
+     // Реактивная ref ссылка на проп типа главного сигнала
+    const typeOfMainSignalRef = toRef(props, 'typeOfMainSignal')
     // Реактивная ref ссылка на id для генерации чекбоксов
     const idPrefixRef = toRef(props, 'idPrefix')
     // Реактивная ref ссылка на номер интервала
     const activeIntervalRef = toRef(props, 'activeInterval')
+    // Реактивная ref ссылка на отключение чекбоксов при построении отчета
+    const disabledRef = toRef(props, 'disabled')
 
     // Массив объектов дополнительных датчиков
     const signals = ref([])
@@ -48,12 +55,31 @@ export default {
     // layout для графика
     const layoutMultipleAxes = ref({})
 
+    const changeSignalCheckbox = async () => {
+      loadStateInterval.value = true
+
+      setActiveSignals(typeOfMainSignalRef.value, mainSignalRef.value.kks, [mainSignalRef.value.kks, ...signals.value.map(({ kks }) => kks)], signalsCheckbox.value)
+
+      await updatePlotlyMultipleAxes(
+        dataMultipleAxes,
+        layoutMultipleAxes,
+        mainSignalRef,
+        object,
+        activeIntervalRef.value,
+        signals,
+        signalsCheckbox,
+      )
+      loadStateInterval.value = false
+    }
+
     // Хук, вызываемый после монтажа компонента для его инициализации
     onMounted(async () => {
       loadStateInterval.value = true
       await getAdditionalsSignals(signals, mainSignalRef, object)
       signalsCheckbox.value = signals.value.map(({ kks }) => kks)
       signalsCheckbox.value.unshift(mainSignalRef.value.kks)
+      setActiveSignals(typeOfMainSignalRef.value, mainSignalRef.value.kks, signalsCheckbox.value, signalsCheckbox.value)
+
       await updatePlotlyMultipleAxes(
         dataMultipleAxes,
         layoutMultipleAxes,
@@ -74,25 +100,16 @@ export default {
       loadStateInterval.value = false
     })
 
-    const changeSignalCheckbox = async () => {
-      loadStateInterval.value = true
-      await updatePlotlyMultipleAxes(
-        dataMultipleAxes,
-        layoutMultipleAxes,
-        mainSignalRef,
-        object,
-        activeIntervalRef.value,
-        signals,
-        signalsCheckbox,
-      )
-      loadStateInterval.value = false
-    }
+    onUnmounted(async () => {
+      delete activeSignals[typeOfMainSignalRef.value][mainSignalRef.value.kks]
+    })
 
     return {
       headerTitleRef,
       mainSignalRef,
       idPrefixRef,
       activeIntervalRef,
+      disabledRef,
       signals,
       signalsCheckbox,
       loadStateInterval,
@@ -141,6 +158,7 @@ export default {
           name="signalsCheckbox"
           :value="mainSignalRef.kks"
           @change="changeSignalCheckbox"
+          :disabled="disabledRef"
         ></Checkbox>
         <label :for="idPrefixRef + mainSignalRef.kks + '-Signals'"
           >Основной сигнал:
@@ -158,6 +176,7 @@ export default {
           name="signalsCheckbox"
           :value="signal.kks"
           @change="changeSignalCheckbox"
+          :disabled="disabledRef"
         ></Checkbox>
         <label :for="idPrefixRef + signal.kks + '-Signals'"
           >Дополнительный сигнал:

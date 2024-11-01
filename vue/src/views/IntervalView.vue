@@ -5,14 +5,18 @@ import { storeToRefs } from 'pinia'
 
 import { useApplicationStore } from '../stores/applicationStore'
 
-import { getTopAndOtherGroupSignals } from '../stores'
+import { getTopAndOtherGroupSignals, startIntervalReport } from '../stores'
+
+import { socket } from '../socket'
+import axios from 'axios'
 
 export default {
   setup() {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
+    const { activeSignals } = applicationStore
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { object, group, intervals } = storeToRefs(applicationStore)
+    const { object, group, intervals, loadStateSidebar } = storeToRefs(applicationStore)
     // Определение текущего URL
     const route = useRoute()
     const currentRoute = computed(() => route.path)
@@ -35,14 +39,40 @@ export default {
     const otherGroupSignals = ref([])
     const otherCheckbox = ref([])
 
-    // Отключение элементов view интервалов
-    const intervalElementsDisable = ref(true)
     // Процент построения отчета по интервалу
-    const percentReport = ref(100)
+    const percentIntervalReport = ref(0)
+    // Флаг показа ProgressBar
+    const intervalReportActive = ref(false)
 
     // Нажатие на кнопку построения отчета на интервале
-    const onButtonPdfClick = () => {
-      console.log('clicked')
+    const onIntervalReportButtonClick = async () => {
+      percentIntervalReport.value = 0
+      loadStateSidebar.value = true
+      intervalReportActive.value = true
+      let status = await startIntervalReport(object, group, activeInterval,
+              topGroupSignals, otherGroupSignals, activeSignals)
+
+      if (status !== 'error'){
+        // Загрузка файла
+        const URL = window.api.url
+        const linkCommonReport = document.createElement('a')
+        linkCommonReport.download = `interval_report_${object.value}_group_${group.value}_${activeIntervalLabel.value}.html`
+
+        await axios
+          .get(URL+'/interval_report.html', {params: {objectSelected: object.value, groupSelected: group.value, activeInterval: activeInterval.value}})
+          .then((res) => {
+            linkCommonReport.href = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html'}))
+            linkCommonReport.click()
+            linkCommonReport.remove()
+            window.URL.revokeObjectURL(linkCommonReport.href)
+          })
+          .catch(error => {
+            console.log(error)})
+      }
+      percentIntervalReport.value = 100
+      intervalReportActive.value = false
+
+      loadStateSidebar.value = false
     }
 
     // Хук, вызываемый после монтажа компонента для его инициализации
@@ -74,6 +104,11 @@ export default {
         topCheckbox.value = topGroupSignals.value.map(({ kks }) => kks)
     })
 
+    // Прослушка процента выполнения построения отчета интервала
+    socket.on('setPercentIntervalReport', percents => {
+      percentIntervalReport.value = percents
+    })
+
     return {
       currentRoute,
       activeInterval,
@@ -82,9 +117,9 @@ export default {
       topCheckbox,
       otherGroupSignals,
       otherCheckbox,
-      intervalElementsDisable,
-      percentReport,
-      onButtonPdfClick,
+      percentIntervalReport,
+      intervalReportActive,
+      onIntervalReportButtonClick,
     }
   },
 }
@@ -101,14 +136,14 @@ export default {
           <h4>{{ activeIntervalLabel }}</h4>
         </div>
         <div class="col-md-2 text-end">
-          <Button @click="onButtonPdfClick">PDF отчет</Button>
+          <Button @click="onIntervalReportButtonClick" :disabled="intervalReportActive">PDF отчет</Button>
         </div>
         <div
           class="col-md-3"
-          v-if="intervalElementsDisable"
+          v-if="intervalReportActive"
           :style="{ padding: '0px 0px 0px 10px' }"
         >
-          <ProgressBar :value="percentReport"></ProgressBar>
+          <ProgressBar :value="percentIntervalReport"></ProgressBar>
         </div>
       </div>
     </div>
@@ -129,6 +164,7 @@ export default {
             :input-id="top.kks"
             name="topCheckobx"
             :value="top.kks"
+            :disabled="intervalReportActive"
           ></Checkbox>
           <label :for="top.kks">{{
             top.kks + ' (' + top.description + ')'
@@ -147,6 +183,7 @@ export default {
             :input-id="other.kks"
             name="otherCheckbox"
             :value="other.kks"
+            :disabled="intervalReportActive"
           ></Checkbox>
           <label :for="other.kks">{{
             other.kks + ' (' + other.description + ')'
@@ -162,6 +199,8 @@ export default {
           :mainSignal="top"
           :idPrefix="'top-' + top.kks + '-'"
           :activeInterval="activeInterval"
+          :disabled="intervalReportActive"
+          :typeOfMainSignal="'top'"
         ></UPlotlyMultipleAxes>
       </div>
     </div>
@@ -172,6 +211,8 @@ export default {
           :mainSignal="other"
           :idPrefix="'other-' + other.kks + '-'"
           :activeInterval="activeInterval"
+          :disabled="intervalReportActive"
+          :typeOfMainSignal="'other'"
         ></UPlotlyMultipleAxes>
       </div>
     </div>

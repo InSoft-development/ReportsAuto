@@ -94,7 +94,8 @@ def define_additional_signals(kks_with_groups: pd.DataFrame,
 
 
 def define_signals(kks_with_groups: pd.DataFrame, main_signal_kks: str, power_kks: str,
-                   palette_main: str, palette_power: str, palette_other: List[str]) -> List[Dict[str, str]]:
+                   palette_main: str, palette_power: str, palette_other: List[str],
+                   active_signals: List[str] = None) -> List[Dict[str, str]]:
     clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
              (kks_with_groups['kks'] != power_kks)
     clause_for_power_descr = kks_with_groups['kks'] == power_kks
@@ -117,8 +118,13 @@ def define_signals(kks_with_groups: pd.DataFrame, main_signal_kks: str, power_kk
     palette.insert(0, palette_main)
     logger.info(signals)
 
-    return [{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
-            zip(signals, signals_descr, palette)]
+    defined_signals = [{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
+                       zip(signals, signals_descr, palette)]
+
+    if active_signals is not None:
+        defined_signals = [signal for signal in defined_signals if signal['kks'] in active_signals]
+
+    return defined_signals
 
 
 def fill_plotly_interval_all(roll_df: pd.DataFrame, object_selected: str, group_selected: int,

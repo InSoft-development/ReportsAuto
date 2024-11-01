@@ -14,6 +14,18 @@ export const useApplicationStore = defineStore('ApplicationStore', () => {
   })
   const loadStateSidebar = ref(false)
 
+  const activeSignals = reactive({
+    'top': {},
+    'other': {}
+  })
+
+  const setActiveSignals = (typeSignal, mainSignal, signals, signalsCheckbox) => {
+    activeSignals[typeSignal][mainSignal] = {
+      'signals': signals,
+      'activeSignals': signalsCheckbox
+    }
+  }
+  
   return {
     intervals,
     object,
@@ -21,5 +33,7 @@ export const useApplicationStore = defineStore('ApplicationStore', () => {
     collapsed,
     sidebarWidth,
     loadStateSidebar,
+    activeSignals,
+    setActiveSignals
   }
 })

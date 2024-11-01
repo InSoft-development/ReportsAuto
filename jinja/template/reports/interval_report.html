@@ -10,6 +10,7 @@
         </div>
     </div>
     {{ interval_chart[loop.index0]["intervals_chart"] }}
+    {% if part_of_common_report %}
     {% if interval["top_sensors"] %}
     <div class="row">
         <div class="col">
@@ -47,6 +48,84 @@
         </div>
         {% endfor %}
     {% endfor %}
+    {% endif %}
+    {% else %}
+    {% if tops %}
+    <div class="row">
+        <div class="col">
+            <h3 class="interval-report-header">Выбранные сигналы, внесшие наибольший вклад</h3>
+        </div>
+    </div>
+    {% for top in tops %}
+    <div class="row">
+        <div class="col">
+            <div>{{ top }}</div>
+        </div>
+    </div>
+    {% endfor %}
+    {% for multiples_axes_top_chart in interval_chart[0]["multiples_axes_top_chart"] %}
+    {{ multiples_axes_top_chart }}
+        {% for signal in interval_chart[0]["multiples_axes_top_signals"][loop.index0] %}
+        <div class="row">
+            <div class="col">
+                {% if loop.index0 == 0 %}
+                <div>
+                    Основной сигнал:
+                    <span style="color: {{ signal["color"] }}">
+                        {{ signal["kks"] }} ({{ signal["description"] }})
+                    </span>
+                </div>
+                {% else %}
+                <div>
+                    Дополнительный сигнал:
+                    <span style="color: {{ signal["color"] }}">
+                        {{ signal["kks"] }} ({{ signal["description"] }})
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% endfor %}
+    {% endif %}
+    {% if others %}
+    <div class="row">
+        <div class="col">
+            <h3 class="interval-report-header">Остальные выбранные сигналы группы</h3>
+        </div>
+    </div>
+    {% for other in others %}
+    <div class="row">
+        <div class="col">
+            <div>{{ other }}</div>
+        </div>
+    </div>
+    {% endfor %}
+    {% for multiples_axes_other_chart in interval_chart[0]["multiples_axes_other_chart"] %}
+    {{ multiples_axes_other_chart }}
+        {% for signal in interval_chart[0]["multiples_axes_other_signals"][loop.index0] %}
+        <div class="row">
+            <div class="col">
+                {% if loop.index0 == 0 %}
+                <div>
+                    Основной сигнал:
+                    <span style="color: {{ signal["color"] }}">
+                        {{ signal["kks"] }} ({{ signal["description"] }})
+                    </span>
+                </div>
+                {% else %}
+                <div>
+                    Дополнительный сигнал:
+                    <span style="color: {{ signal["color"] }}">
+                        {{ signal["kks"] }} ({{ signal["description"] }})
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% endfor %}
+    {% endif %}
     {% endif %}
     {% endfor %}
 </div>
