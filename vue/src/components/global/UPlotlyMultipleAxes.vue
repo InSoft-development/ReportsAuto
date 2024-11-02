@@ -33,7 +33,7 @@ export default {
     const headerTitleRef = toRef(props, 'headerTitle')
     // Реактивная ref ссылка на объект главного сигнала
     const mainSignalRef = toRef(props, 'mainSignal')
-     // Реактивная ref ссылка на проп типа главного сигнала
+    // Реактивная ref ссылка на проп типа главного сигнала
     const typeOfMainSignalRef = toRef(props, 'typeOfMainSignal')
     // Реактивная ref ссылка на id для генерации чекбоксов
     const idPrefixRef = toRef(props, 'idPrefix')
@@ -58,7 +58,12 @@ export default {
     const changeSignalCheckbox = async () => {
       loadStateInterval.value = true
 
-      setActiveSignals(typeOfMainSignalRef.value, mainSignalRef.value.kks, [mainSignalRef.value.kks, ...signals.value.map(({ kks }) => kks)], signalsCheckbox.value)
+      setActiveSignals(
+        typeOfMainSignalRef.value,
+        mainSignalRef.value.kks,
+        [mainSignalRef.value.kks, ...signals.value.map(({ kks }) => kks)],
+        signalsCheckbox.value,
+      )
 
       await updatePlotlyMultipleAxes(
         dataMultipleAxes,
@@ -78,7 +83,12 @@ export default {
       await getAdditionalsSignals(signals, mainSignalRef, object)
       signalsCheckbox.value = signals.value.map(({ kks }) => kks)
       signalsCheckbox.value.unshift(mainSignalRef.value.kks)
-      setActiveSignals(typeOfMainSignalRef.value, mainSignalRef.value.kks, signalsCheckbox.value, signalsCheckbox.value)
+      setActiveSignals(
+        typeOfMainSignalRef.value,
+        mainSignalRef.value.kks,
+        signalsCheckbox.value,
+        signalsCheckbox.value,
+      )
 
       await updatePlotlyMultipleAxes(
         dataMultipleAxes,

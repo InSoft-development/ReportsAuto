@@ -230,7 +230,6 @@ def interval_detection(post_processing: dict) -> Dict[str, str]:
     if p_get_interval is not None:
         return {'causeException': "Процесс уже запущен для другого клиента", 'status': 'error'}
     sid_proc = sid
-    # post_processing = request.get_json('postProcessing')
     logger.info(f"interval_detection({post_processing})")
 
     post_processing = routine.dict_to_snake_case(post_processing)
@@ -266,21 +265,18 @@ def interval_detection(post_processing: dict) -> Dict[str, str]:
         # Восстанавливаем исходный конфиг и объекты
         config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP,
                                          constants.OBJECTS)
-        # return jsonify(causeException=str(subprocess_exception), status='error')
         return {'causeException': str(subprocess_exception), 'status': 'error'}
     except RuntimeError as run_time_error:
         logger.error(run_time_error)
         # Восстанавливаем исходный конфиг и объекты
         config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP,
                                          constants.OBJECTS)
-        # return jsonify(causeException=str(run_time_error), status='error')
         return {'causeException': str(run_time_error), 'status': 'error'}
     except KeyboardInterrupt as keyboard_interrupt:
         logger.warning("KeyboardInterrupt")
         # Восстанавливаем исходный конфиг и объекты
         config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP,
                                          constants.OBJECTS)
-        # return jsonify(causeException=str(keyboard_interrupt), status='error')
         return {'causeException': str(keyboard_interrupt), 'status': 'error'}
 
     # Интервалы успешно выделились - бекап не нужен, удаляем временную директорию
@@ -290,16 +286,13 @@ def interval_detection(post_processing: dict) -> Dict[str, str]:
     if return_code != 0:
         config = routine.backup_recovery(constants.CONFIG, config_backup, constants.OBJECTS_BACKUP, constants.OBJECTS)
         p_get_interval = None
-        # return jsonify(causeException=f"код завершения процесса {p_get_interval.returncode}", status='success')
         return {'causeException': f"код завершения процесса {return_code}", 'status': 'success'}
     routine.remove_recursively_objects_directory(constants.OBJECTS_BACKUP)
     p_get_interval = None
-    # return jsonify(status='success')
     return {'status': 'success'}
 
 
 @socketio.on('/api/cancel_interval_detection/')
-# @app.route('/api/cancel_interval_detection/', methods=['POST'])
 def interval_detection_cancel() -> Dict[str, str]:
     global config, p_get_interval, sid_proc
     sid = request.sid
@@ -313,7 +306,6 @@ def interval_detection_cancel() -> Dict[str, str]:
         sid_proc = None
         logger.info("p_get_interval canceled")
     return {'status': 'success'}
-    # return jsonify(status='success')
 
 
 @app.route('/api/update_plotly_interval/', methods=['GET'])
@@ -365,26 +357,6 @@ def get_additional_signals() -> Response:
     object_selected = request.args.get('objectSelected', type=str)
 
     logger.info(f"get_additional_signals({main_signal_kks}, {object_selected})")
-
-    # clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
-    #          (kks_with_groups['kks'] != config[object_selected]['power_index'])
-    # clause_for_power_descr = kks_with_groups['kks'] == config[object_selected]['power_index']
-    #
-    # additional_signals = kks_with_groups.loc[clause]['kks'].tolist()[:3]
-    # additional_signals_descr = kks_with_groups.loc[clause]['name'].tolist()[:3]
-    #
-    # # Определяем палетту для применения цвета к чекбоксу для дополнительных сигналов
-    # palette = constants.PALETTE['other'][:len(additional_signals)]
-    #
-    # # Добавляем в начала списков сигнал мощности, его описание и цвет, если он не главный сигнал
-    # if main_signal_kks != config[object_selected]['power_index']:
-    #     additional_signals.insert(0, config[object_selected]['power_index'])
-    #     additional_signals_descr.insert(0, kks_with_groups.loc[clause_for_power_descr]['name'].values[0])
-    #     palette.insert(0, constants.PALETTE['power'])
-
-    # return jsonify(additionalSignals=[{'kks': kks, 'description': descr, 'color': color} for kks, descr, color in
-    #                                   zip(additional_signals, additional_signals_descr, palette)])
-
     return jsonify(additionalSignals=routine.define_additional_signals(kks_with_groups,
                                                                        main_signal_kks,
                                                                        config[object_selected]['power_index'],
@@ -419,9 +391,21 @@ def update_plotly_multiple_axes() -> Response:
     return jsonify(data=data, layout=layout)
 
 
+@app.route('/api/update_plotly_histogram/', methods=['GET'])
+def update_plotly_histogram() -> Response:
+    global loss_df
+    logger.info(f"update_plotly_histogram()")
+
+    data, layout = routine.fill_plotly_histogram(loss_df,
+                                                 config['post_processing']['threshold_short'],
+                                                 config['post_processing']['threshold_long'])
+
+    return jsonify(data=data, layout=layout)
+
+
 @socketio.on('/api/common_report/')
 def common_report(object_selected: str, group_selected: int) -> Dict[str, str]:
-    global slices_df, roll_df, kks_with_groups
+    global slices_df, roll_df, loss_df, kks_with_groups
     sid = request.sid
     logger.info(f"common_report({object_selected}, {group_selected})")
 
@@ -432,10 +416,12 @@ def common_report(object_selected: str, group_selected: int) -> Dict[str, str]:
         'group': group_selected,
         'interval': json_interval,
         'power': config[object_selected]['power_index'],
-        'palette': constants.PALETTE
+        'palette': constants.PALETTE,
+        'threshold_short': config['post_processing']['threshold_short'],
+        'threshold_long': config['post_processing']['threshold_long']
     }
 
-    return template.get_render_common_report(socketio, slices_df, roll_df, kks_with_groups, params)
+    return template.get_render_common_report(socketio, slices_df, roll_df, loss_df, kks_with_groups, params)
 
 
 @socketio.on('/api/interval_report/')

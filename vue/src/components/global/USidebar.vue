@@ -80,22 +80,27 @@ export default {
       loadStateSidebar.value = true
       commonReportActive.value = true
       let status = await startCommonReport(objectSelected, groupSelected)
-      if (status !== 'error'){
+      if (status !== 'error') {
         // Загрузка файла
         const URL = window.api.url
         const linkCommonReport = document.createElement('a')
         linkCommonReport.download = `common_report_${objectSelected.value}_group_${groupSelected.value}.html`
 
         await axios
-          .get(URL+'/common_report.html', {params: {objectSelected: objectSelected.value,}})
-          .then((res) => {
-            linkCommonReport.href = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html'}))
+          .get(URL + '/common_report.html', {
+            params: { objectSelected: objectSelected.value },
+          })
+          .then(res => {
+            linkCommonReport.href = window.URL.createObjectURL(
+              new Blob([res.data], { type: 'text/html' }),
+            )
             linkCommonReport.click()
             linkCommonReport.remove()
             window.URL.revokeObjectURL(linkCommonReport.href)
           })
           .catch(error => {
-            console.log(error)})
+            console.log(error)
+          })
       }
       percentCommonReport.value = 100
       commonReportActive.value = false
@@ -137,7 +142,7 @@ export default {
       onRedirectAfterIntervalDetection,
       percentCommonReport,
       commonReportActive,
-      onCommonReportButtonClick
+      onCommonReportButtonClick,
     }
   },
 }
@@ -183,12 +188,18 @@ export default {
       </div>
       <div class="sidebar-div-button">
         <div class="sidebar-button-wrapper">
-          <Button class="sidebar-button" @click="onCommonReportButtonClick" :disabled="loadStateSidebar"
+          <Button
+            class="sidebar-button"
+            @click="onCommonReportButtonClick"
+            :disabled="loadStateSidebar"
             >PDF</Button
           >
         </div>
         <div v-if="commonReportActive">
-          <ProgressBar class="col-10 align-self-center" :value="percentCommonReport"></ProgressBar>
+          <ProgressBar
+            class="col-10 align-self-center"
+            :value="percentCommonReport"
+          ></ProgressBar>
         </div>
       </div>
       <div class="sidebar-div-button">

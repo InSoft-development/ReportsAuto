@@ -23,7 +23,8 @@ def get_unfilled_html_from_source(content_for_render, url):
     return default_html
 
 
-def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFrame, kks_with_groups: DataFrame,
+def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFrame, loss: DataFrame,
+                             kks_with_groups: DataFrame,
                              params: Dict[str, Union[str, int, List[dict], Dict[str, Union[str, List[str]]]]]) \
         -> Dict[str, str]:
     logger.info(f"get_render_common_report({socketio}, slices, roll, kks_with_groups, {params})")
@@ -57,6 +58,23 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
         return {'error': str(interval_all_render_error)}
 
     socketio.emit("setPercentCommonReport", 20, to=params['sid'])
+
+    # Рендеринг шаблона гистограммы распределения
+    try:
+        histogram_rendered = [tm.render(chart={
+            "header": "Гистограмма распределения функции потерь датчиков (loss) "
+                      "и вероятности возникновения аномалии (predict)",
+            "variablePostfix": f"Histogram",
+            "id": f"histogram",
+            "data": data,
+            "layout": json.dumps(layout)
+        }) for data, layout in [routine.fill_plotly_histogram(loss,
+                                                              params['threshold_short'],
+                                                              params['threshold_long'])]][0]
+    except Exception as histogram_render_error:
+        return {'error': str(histogram_render_error)}
+
+    socketio.emit("setPercentCommonReport", 30, to=params['sid'])
 
     # Формирование и рендеринг графиков вероятности за определенный интервал
     try:
@@ -131,7 +149,8 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
         tm = env.get_template('common_report.html')
         common_report_rendered = tm.render(preamble=preamble, main_chart=main_chart_rendered,
                                            intervals=[interval['time'] for interval in params['interval']],
-                                           interval_report=interval_report_rendered)
+                                           interval_report=interval_report_rendered,
+                                           histogram=histogram_rendered)
     except Exception as common_report_rendered_error:
         return {'error': str(common_report_rendered_error)}
 

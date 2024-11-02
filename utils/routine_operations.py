@@ -3,6 +3,8 @@ import shutil
 import errno
 
 import pandas as pd
+import numpy as np
+from scipy.stats import rv_histogram
 
 import yaml
 
@@ -15,8 +17,6 @@ def to_camel_case(snake_str: str) -> str:
 
 
 def to_lower_camel_case(snake_str: str) -> str:
-    # We capitalize the first letter of each component except the first one
-    # with the 'capitalize' method and join them together.
     camel_string = to_camel_case(snake_str)
     return snake_str[0].lower() + camel_string[1:]
 
@@ -454,5 +454,83 @@ def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: L
                 active_index += 1
             if (signal not in active_signals) and (signal != params['main_signal']) and (signal != params['power']):
                 other_index += 1
+
+    return data, layout
+
+
+def fill_plotly_histogram(loss: pd.DataFrame, threshold_short: int, threshold_long: int) -> Tuple[List[dict], dict]:
+    # Вычисляем средний loss по датчикам в каждом отсчете времени, предварительно заполнив Nan нулями
+    loss_mean = loss.fillna(0).mean(axis=1, skipna=True).values.tolist()
+
+    # Гистограмма количества вхождений значения loss в интервал
+    hist = np.histogram(loss_mean, bins=100)
+    # Распределение, заданное гистограммой
+    dist = rv_histogram(hist)
+    # Разбиение на интервалы от минимального до максимального значения
+    partition = np.arange(min(loss_mean), max(loss_mean), 0.01).tolist()
+    dist_cdf_list = list(100 * dist.cdf(partition))
+
+    # Ближайшие значения вероятности порогов на функции распределения
+    short_abs = min([abs(f - threshold_short) for f in dist_cdf_list])
+    x_short = [f for f in dist_cdf_list if abs(f - threshold_short) == short_abs][0]
+
+    long_abs = min([abs(f - threshold_long) for f in dist_cdf_list])
+    x_long = [f for f in dist_cdf_list if abs(f - threshold_long) == long_abs][0]
+
+    data = [
+        {
+            'x': partition,
+            'y': list(100 * dist.pdf(partition)),
+            'type': 'scatter',
+            'name': 'loss (PDF)',
+        },
+        {
+            'x': partition,
+            'y': list(100 * dist.cdf(partition)),
+            'type': 'scatter',
+            'name': 'Вероятность (CDF)',
+        }
+    ]
+
+    layout = {
+        'title': f'Порог коротких интервалов: {threshold_short}, Порог длинных интервалов: {threshold_long}',
+        'shapes': [
+            {
+                'type': 'line',
+                'xref': 'x',
+                'yref': 'paper',
+                'x0': partition[dist_cdf_list.index(x_short)],
+                'y0': 0,
+                'x1': partition[dist_cdf_list.index(x_short)],
+                'y1': 1,
+                'line': {
+                    'width': 1,
+                    'color': '#2ca02c',
+                    'layer': 'below'
+                }
+            },
+            {
+                'type': 'line',
+                'xref': 'x',
+                'yref': 'paper',
+                'x0': partition[dist_cdf_list.index(x_long)],
+                'y0': 0,
+                'x1': partition[dist_cdf_list.index(x_long)],
+                'y1': 1,
+                'line': {
+                    'width': 1,
+                    'color': '#9467bd',
+                    'layer': 'below'
+                }
+            }
+        ],
+        'showlegend': False,
+        'xaxis': {
+            'title': 'Распределение loss'
+        },
+        'yaxis': {
+            'title': 'Количество попаданий'
+        }
+    }
 
     return data, layout

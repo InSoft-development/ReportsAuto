@@ -16,7 +16,8 @@ export default {
     const applicationStore = useApplicationStore()
     const { activeSignals } = applicationStore
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { object, group, intervals, loadStateSidebar } = storeToRefs(applicationStore)
+    const { object, group, intervals, loadStateSidebar } =
+      storeToRefs(applicationStore)
     // Определение текущего URL
     const route = useRoute()
     const currentRoute = computed(() => route.path)
@@ -49,25 +50,40 @@ export default {
       percentIntervalReport.value = 0
       loadStateSidebar.value = true
       intervalReportActive.value = true
-      let status = await startIntervalReport(object, group, activeInterval,
-              topGroupSignals, otherGroupSignals, activeSignals)
+      let status = await startIntervalReport(
+        object,
+        group,
+        activeInterval,
+        topGroupSignals,
+        otherGroupSignals,
+        activeSignals,
+      )
 
-      if (status !== 'error'){
+      if (status !== 'error') {
         // Загрузка файла
         const URL = window.api.url
         const linkCommonReport = document.createElement('a')
         linkCommonReport.download = `interval_report_${object.value}_group_${group.value}_${activeIntervalLabel.value}.html`
 
         await axios
-          .get(URL+'/interval_report.html', {params: {objectSelected: object.value, groupSelected: group.value, activeInterval: activeInterval.value}})
-          .then((res) => {
-            linkCommonReport.href = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html'}))
+          .get(URL + '/interval_report.html', {
+            params: {
+              objectSelected: object.value,
+              groupSelected: group.value,
+              activeInterval: activeInterval.value,
+            },
+          })
+          .then(res => {
+            linkCommonReport.href = window.URL.createObjectURL(
+              new Blob([res.data], { type: 'text/html' }),
+            )
             linkCommonReport.click()
             linkCommonReport.remove()
             window.URL.revokeObjectURL(linkCommonReport.href)
           })
           .catch(error => {
-            console.log(error)})
+            console.log(error)
+          })
       }
       percentIntervalReport.value = 100
       intervalReportActive.value = false
@@ -136,7 +152,11 @@ export default {
           <h4>{{ activeIntervalLabel }}</h4>
         </div>
         <div class="col-md-2 text-end">
-          <Button @click="onIntervalReportButtonClick" :disabled="intervalReportActive">PDF отчет</Button>
+          <Button
+            @click="onIntervalReportButtonClick"
+            :disabled="intervalReportActive"
+            >PDF отчет</Button
+          >
         </div>
         <div
           class="col-md-3"

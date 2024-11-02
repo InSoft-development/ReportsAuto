@@ -26,7 +26,7 @@ export default {
     })
 
     const routeToHome = () => {
-      router.push('/')
+      if (currentRoute.value !== '/addition') router.push('/')
     }
 
     return {

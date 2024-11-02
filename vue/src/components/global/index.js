@@ -2,6 +2,7 @@ import USidebar from './USidebar.vue'
 import UDialog from './UDialog.vue'
 import UPlotlyInterval from './UPlotlyInterval.vue'
 import UPlotlyMultipleAxes from './UPlotlyMultipleAxes.vue'
+import UPlotlyHistogram from './UPlotlyHistogram.vue'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
@@ -38,6 +39,10 @@ const components = [
   {
     name: 'UPlotlyMultipleAxes',
     component: UPlotlyMultipleAxes,
+  },
+  {
+    name: 'UPlotlyHistogram',
+    component: UPlotlyHistogram,
   },
   {
     name: 'Button',

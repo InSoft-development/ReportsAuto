@@ -38,38 +38,50 @@ export async function cancelIntervalDetection() {
 }
 
 export async function startCommonReport(objectSelected, groupSelected) {
+  let status = ''
   await new Promise(resolve => {
-    socket.emit('/api/common_report/', objectSelected.value, groupSelected.value, res => {
-      if ('error' in res) {
-        alert(res.error)
-        return 'error'
-      }
-      resolve(res)
-    })
+    socket.emit(
+      '/api/common_report/',
+      objectSelected.value,
+      groupSelected.value,
+      res => {
+        resolve(res)
+        if ('error' in res) {
+          alert(res.error)
+          status = 'error'
+        }
+      },
+    )
   })
+  return status
 }
 
-export async function startIntervalReport(objectSelected,
-                                          groupSelected,
-                                          intervalSelected,
-                                          topGroupSignals,
-                                          otherGroupSignals,
-                                          activeSignals) {
-
+export async function startIntervalReport(
+  objectSelected,
+  groupSelected,
+  intervalSelected,
+  topGroupSignals,
+  otherGroupSignals,
+  activeSignals,
+) {
+  let status = ''
   await new Promise(resolve => {
-    socket.emit('/api/interval_report/',
-        objectSelected.value,
-        groupSelected.value,
-        intervalSelected.value,
-        topGroupSignals.value.map(({ kks }) => kks),
-        otherGroupSignals.value.map(({ kks }) => kks),
-        activeSignals,
-            res => {
-      if ('error' in res) {
-        alert(res.error)
-        return 'error'
-      }
-      resolve(res)
-    })
+    socket.emit(
+      '/api/interval_report/',
+      objectSelected.value,
+      groupSelected.value,
+      intervalSelected.value,
+      topGroupSignals.value.map(({ kks }) => kks),
+      otherGroupSignals.value.map(({ kks }) => kks),
+      activeSignals,
+      res => {
+        resolve(res)
+        if ('error' in res) {
+          alert(res.error)
+          status = 'error'
+        }
+      },
+    )
   })
+  return status
 }

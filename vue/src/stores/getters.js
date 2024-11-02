@@ -222,3 +222,17 @@ export async function updatePlotlyMultipleAxes(
       console.log(error)
     })
 }
+
+export async function updatePlotlyHistogram(data, layout) {
+  let url = URL + 'api/update_plotly_histogram/'
+
+  await axios
+    .get(url)
+    .then(res => {
+      data.value = res.data.data
+      layout.value = res.data.layout
+    })
+    .catch(error => {
+      console.log(error)
+    })
+}
