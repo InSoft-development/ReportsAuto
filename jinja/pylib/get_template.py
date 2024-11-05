@@ -60,19 +60,22 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
     socketio.emit("setPercentCommonReport", 20, to=params['sid'])
 
     # Рендеринг шаблона гистограммы распределения
-    try:
-        histogram_rendered = [tm.render(chart={
-            "header": "Гистограмма распределения функции потерь датчиков (loss) "
-                      "и вероятности возникновения аномалии (predict)",
-            "variablePostfix": f"Histogram",
-            "id": f"histogram",
-            "data": data,
-            "layout": json.dumps(layout)
-        }) for data, layout in [routine.fill_plotly_histogram(loss,
-                                                              params['threshold_short'],
-                                                              params['threshold_long'])]][0]
-    except Exception as histogram_render_error:
-        return {'error': str(histogram_render_error)}
+    histogram_rendered = ""
+    if params["group"] != 0:
+        try:
+            histogram_rendered = [tm.render(chart={
+                "header": "Гистограмма распределения функции потерь датчиков (loss) "
+                          "и вероятности возникновения аномалии (predict)",
+                "variablePostfix": f"Histogram",
+                "id": f"histogram",
+                "data": data,
+                "layout": json.dumps(layout)
+            }) for data, layout in [routine.fill_plotly_histogram(loss,
+                                                                  params['threshold_short'],
+                                                                  params['threshold_long'])]][0]
+        except Exception as histogram_render_error:
+            logger.error(histogram_render_error)
+            return {'error': str(histogram_render_error)}
 
     socketio.emit("setPercentCommonReport", 30, to=params['sid'])
 
