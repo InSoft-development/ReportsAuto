@@ -1,9 +1,14 @@
 {% if not part_of_common_report %}
-{% include "preamble.html" %}
+    {% include "preamble.html" %}
+    <div class="container-fluid">
+{% else %}
+    <div class="container-fluid pb-before">
 {% endif %}
-<div class="container-fluid">
-    {% for interval in intervals %}
+{% for interval in intervals %}
     {% set interval_loop = loop %}
+    {% if part_of_common_report %}
+        <div class="pb-after">
+    {% endif %}
     <div class="row">
         <div class="col d-flex justify-content-center">
             <h3 class="interval-report-header">Интервал {{ interval["time"][0] }} -- {{ interval["time"][1] }}</h3>
@@ -11,127 +16,142 @@
     </div>
     {{ interval_chart[loop.index0]["intervals_chart"] }}
     {% if part_of_common_report %}
-    {% if interval["top_sensors"] %}
-    <div class="row">
-        <div class="col">
-            <h3 class="interval-report-header">Сигналы внесшие наибольший вклад</h3>
-        </div>
-    </div>
-    {% for top in interval["top_sensors"]%}
-    <div class="row">
-        <div class="col">
-            <div>{{ top }}</div>
-        </div>
-    </div>
-    {% endfor %}
-    {% for multiples_axes_chart in interval_chart[interval_loop.index0]["multiples_axes_chart"] %}
-    {{ multiples_axes_chart }}
-        {% for signal in interval_chart[interval_loop.index0]["multiples_axes_signals"][loop.index0] %}
-        <div class="row">
-            <div class="col">
-                {% if loop.index0 == 0 %}
-                <div>
-                    Основной сигнал:
-                    <span style="color: {{ signal["color"] }}">
-                        {{ signal["kks"] }} ({{ signal["description"] }})
-                    </span>
+        {% if interval["top_sensors"] %}
+            <div class="row">
+                <div class="col">
+                    <h3 class="interval-report-header">Сигналы внесшие наибольший вклад</h3>
                 </div>
-                {% else %}
-                <div>
-                    Дополнительный сигнал:
-                    <span style="color: {{ signal["color"] }}">
-                        {{ signal["kks"] }} ({{ signal["description"] }})
-                    </span>
-                </div>
-                {% endif %}
             </div>
-        </div>
-        {% endfor %}
-    {% endfor %}
-    {% endif %}
+            {% for top in interval["top_sensors"]%}
+                <div class="row">
+                    <div class="col">
+                        <div>{{ top }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+            {% for multiples_axes_chart in interval_chart[interval_loop.index0]["multiples_axes_chart"] %}
+                <div class="pb-inside">
+                    {{ multiples_axes_chart }}
+                    {% for signal in interval_chart[interval_loop.index0]["multiples_axes_signals"][loop.index0] %}
+                        <div class="row">
+                            <div class="col">
+                                {% if loop.index0 == 0 %}
+                                    <div>
+                                        Основной сигнал:
+                                        <span style="color: {{ signal["color"] }}">
+                                            {{ signal["kks"] }} ({{ signal["description"] }})
+                                        </span>
+                                    </div>
+                                {% else %}
+                                    <div>
+                                        Дополнительный сигнал:
+                                        <span style="color: {{ signal["color"] }}">
+                                            {{ signal["kks"] }} ({{ signal["description"] }})
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endif %}
     {% else %}
-    {% if tops %}
-    <div class="row">
-        <div class="col">
-            <h3 class="interval-report-header">Выбранные сигналы, внесшие наибольший вклад</h3>
-        </div>
-    </div>
-    {% for top in tops %}
-    <div class="row">
-        <div class="col">
-            <div>{{ top }}</div>
-        </div>
-    </div>
-    {% endfor %}
-    {% for multiples_axes_top_chart in interval_chart[0]["multiples_axes_top_chart"] %}
-    {{ multiples_axes_top_chart }}
-        {% for signal in interval_chart[0]["multiples_axes_top_signals"][loop.index0] %}
-        <div class="row">
-            <div class="col">
-                {% if loop.index0 == 0 %}
-                <div>
-                    Основной сигнал:
-                    <span style="color: {{ signal["color"] }}">
-                        {{ signal["kks"] }} ({{ signal["description"] }})
-                    </span>
+        {% if tops %}
+            <div class="row">
+                <div class="col">
+                    <h3 class="interval-report-header">Выбранные сигналы, внесшие наибольший вклад</h3>
                 </div>
-                {% else %}
-                <div>
-                    Дополнительный сигнал:
-                    <span style="color: {{ signal["color"] }}">
-                        {{ signal["kks"] }} ({{ signal["description"] }})
-                    </span>
-                </div>
-                {% endif %}
             </div>
-        </div>
-        {% endfor %}
-    {% endfor %}
-    {% endif %}
-    {% if others %}
-    <div class="row">
-        <div class="col">
-            <h3 class="interval-report-header">Остальные выбранные сигналы группы</h3>
-        </div>
-    </div>
-    {% for other in others %}
-    <div class="row">
-        <div class="col">
-            <div>{{ other }}</div>
-        </div>
-    </div>
-    {% endfor %}
-    {% for multiples_axes_other_chart in interval_chart[0]["multiples_axes_other_chart"] %}
-    {{ multiples_axes_other_chart }}
-        {% for signal in interval_chart[0]["multiples_axes_other_signals"][loop.index0] %}
-        <div class="row">
-            <div class="col">
-                {% if loop.index0 == 0 %}
-                <div>
-                    Основной сигнал:
-                    <span style="color: {{ signal["color"] }}">
-                        {{ signal["kks"] }} ({{ signal["description"] }})
-                    </span>
+            {% for top in tops %}
+                <div class="row">
+                    <div class="col">
+                        <div>{{ top }}</div>
+                    </div>
                 </div>
-                {% else %}
-                <div>
-                    Дополнительный сигнал:
-                    <span style="color: {{ signal["color"] }}">
-                        {{ signal["kks"] }} ({{ signal["description"] }})
-                    </span>
+            {% endfor %}
+            {% for multiples_axes_top_chart in interval_chart[0]["multiples_axes_top_chart"] %}
+                <div class="pb-inside">
+                    {{ multiples_axes_top_chart }}
+                    {% for signal in interval_chart[0]["multiples_axes_top_signals"][loop.index0] %}
+                        <div class="row">
+                            <div class="col">
+                                {% if loop.index0 == 0 %}
+                                <div>
+                                    Основной сигнал:
+                                    <span style="color: {{ signal["color"] }}">
+                                        {{ signal["kks"] }} ({{ signal["description"] }})
+                                    </span>
+                                </div>
+                                {% else %}
+                                <div>
+                                    Дополнительный сигнал:
+                                    <span style="color: {{ signal["color"] }}">
+                                        {{ signal["kks"] }} ({{ signal["description"] }})
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
-                {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% if others %}
+            <div class="row pb-before">
+                <div class="col">
+                    <h3 class="interval-report-header">Остальные выбранные сигналы группы</h3>
+                </div>
             </div>
+            {% for other in others %}
+                <div class="row">
+                    <div class="col">
+                        <div>{{ other }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+            {% for multiples_axes_other_chart in interval_chart[0]["multiples_axes_other_chart"] %}
+                <div class="pb-inside">
+                    {{ multiples_axes_other_chart }}
+                    {% for signal in interval_chart[0]["multiples_axes_other_signals"][loop.index0] %}
+                        <div class="row">
+                            <div class="col">
+                                {% if loop.index0 == 0 %}
+                                <div>
+                                    Основной сигнал:
+                                    <span style="color: {{ signal["color"] }}">
+                                        {{ signal["kks"] }} ({{ signal["description"] }})
+                                    </span>
+                                </div>
+                                {% else %}
+                                <div>
+                                    Дополнительный сигнал:
+                                    <span style="color: {{ signal["color"] }}">
+                                        {{ signal["kks"] }} ({{ signal["description"] }})
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
         </div>
-        {% endfor %}
-    {% endfor %}
-    {% endif %}
-    {% endif %}
-    {% endfor %}
-</div>
+{% endfor %}
+    </div>
 
 <style>
 .interval-report-header {
     color: #1f77b4;
 }
+/* Добавляем разрыв перед элементом */
+.pb-before { page-break-before: always; }
+
+/* Добавляем разрыв после элемента */
+.pb-after { page-break-after: always; }
+
+/* Предотвращаем разрыв внутри элемента */
+.pb-inside { page-break-inside: avoid; }
 </style>

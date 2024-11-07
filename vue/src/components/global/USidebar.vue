@@ -11,6 +11,7 @@ import { initSidebar, updateSidebar, startCommonReport } from '../../stores'
 
 import { socket } from '../../socket'
 import axios from 'axios'
+import jsPDF from 'jspdf'
 
 export default {
   name: 'USidebar',
@@ -81,22 +82,43 @@ export default {
       commonReportActive.value = true
       let status = await startCommonReport(objectSelected, groupSelected)
       if (status !== 'error') {
-        // Загрузка файла
         const URL = window.api.url
-        const linkCommonReport = document.createElement('a')
-        linkCommonReport.download = `common_report_${objectSelected.value}_group_${groupSelected.value}.html`
+        // Загрузка файла html
+        const linkCommonReportHtml = document.createElement('a')
+        linkCommonReportHtml.download = `common_report_${objectSelected.value}_group_${groupSelected.value}.html`
 
         await axios
           .get(URL + '/common_report.html', {
             params: { objectSelected: objectSelected.value },
           })
           .then(res => {
-            linkCommonReport.href = window.URL.createObjectURL(
+            linkCommonReportHtml.href = window.URL.createObjectURL(
               new Blob([res.data], { type: 'text/html' }),
             )
-            linkCommonReport.click()
-            linkCommonReport.remove()
-            window.URL.revokeObjectURL(linkCommonReport.href)
+            linkCommonReportHtml.click()
+            linkCommonReportHtml.remove()
+            window.URL.revokeObjectURL(linkCommonReportHtml.href)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+
+        // Загрузка файла pdf
+        const linkCommonReportPdf = document.createElement('a')
+        linkCommonReportPdf.download = `common_report_${objectSelected.value}_group_${groupSelected.value}.pdf`
+
+        await axios
+          .get(URL + '/common_report.pdf', {
+            params: { objectSelected: objectSelected.value },
+            responseType: 'blob',
+          })
+          .then(res => {
+            linkCommonReportPdf.href = window.URL.createObjectURL(
+              new Blob([res.data], { type: 'application/pdf' }),
+            )
+            linkCommonReportPdf.click()
+            linkCommonReportPdf.remove()
+            window.URL.revokeObjectURL(linkCommonReportPdf.href)
           })
           .catch(error => {
             console.log(error)

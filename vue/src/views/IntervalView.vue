@@ -60,10 +60,11 @@ export default {
       )
 
       if (status !== 'error') {
-        // Загрузка файла
+        // Загрузка файла html
         const URL = window.api.url
-        const linkCommonReport = document.createElement('a')
-        linkCommonReport.download = `interval_report_${object.value}_group_${group.value}_${activeIntervalLabel.value}.html`
+        // Загрузка файла html
+        const linkCommonReportHtml = document.createElement('a')
+        linkCommonReportHtml.download = `interval_report_${object.value}_group_${group.value}_${activeIntervalLabel.value}.html`
 
         await axios
           .get(URL + '/interval_report.html', {
@@ -74,12 +75,37 @@ export default {
             },
           })
           .then(res => {
-            linkCommonReport.href = window.URL.createObjectURL(
+            linkCommonReportHtml.href = window.URL.createObjectURL(
               new Blob([res.data], { type: 'text/html' }),
             )
-            linkCommonReport.click()
-            linkCommonReport.remove()
-            window.URL.revokeObjectURL(linkCommonReport.href)
+            linkCommonReportHtml.click()
+            linkCommonReportHtml.remove()
+            window.URL.revokeObjectURL(linkCommonReportHtml.href)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+
+        // Загрузка файла pdf
+        const linkCommonReportPdf = document.createElement('a')
+        linkCommonReportPdf.download = `interval_report_${object.value}_group_${group.value}_${activeIntervalLabel.value}.pdf`
+
+        await axios
+          .get(URL + '/interval_report.pdf', {
+            params: {
+              objectSelected: object.value,
+              groupSelected: group.value,
+              activeInterval: activeInterval.value,
+            },
+            responseType: 'blob',
+          })
+          .then(res => {
+            linkCommonReportPdf.href = window.URL.createObjectURL(
+              new Blob([res.data], { type: 'text/html' }),
+            )
+            linkCommonReportPdf.click()
+            linkCommonReportPdf.remove()
+            window.URL.revokeObjectURL(linkCommonReportPdf.href)
           })
           .catch(error => {
             console.log(error)

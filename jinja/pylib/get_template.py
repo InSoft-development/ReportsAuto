@@ -1,4 +1,5 @@
 from jinja2 import Environment, FileSystemLoader, BaseLoader
+from playwright.sync_api import sync_playwright
 
 import time
 import json
@@ -12,6 +13,9 @@ import utils.routine_operations as routine
 from typing import Dict, Union, List
 from flask_socketio import SocketIO
 from pandas import DataFrame
+
+# import plotly.graph_objs as go
+# import plotly.io as pio
 
 
 def get_unfilled_html_from_source(content_for_render, url):
@@ -174,6 +178,25 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
 
     socketio.emit("setPercentCommonReport", 90, to=params['sid'])
 
+    try:
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            page = browser.new_page()
+            page.goto(os.path.join(f"file://{os.getcwd()}/{constants.OBJECTS}{params['object']}", constants.REPORTS_DIRECTORY,
+                                   f"common_report_{params['object']}.html"))
+            page.pdf(path=os.path.join(constants.OBJECTS + params['object'], constants.REPORTS_DIRECTORY,
+                                       f"common_report_{params['object']}.pdf"),
+                     format='A3',
+                     margin={'top': '0mm', 'right': '0mm', 'bottom': '0mm', 'left': '0mm'},
+                     scale=1.0
+                     )
+            browser.close()
+    except Exception as html_to_pdf:
+        logger.error(html_to_pdf)
+        return {'error': str(html_to_pdf)}
+
+    socketio.emit("setPercentCommonReport", 95, to=params['sid'])
+
     return {'status': 'common report'}
 
 
@@ -301,5 +324,25 @@ def get_render_interval_report(socketio: SocketIO, slices: DataFrame, roll: Data
         return {'error': str(html_render_error)}
 
     socketio.emit("setPercentIntervalReport", 90, to=params['sid'])
+
+    try:
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            page = browser.new_page()
+            page.goto(os.path.join(f"file://{os.getcwd()}/{constants.OBJECTS}{params['object']}",
+                                   constants.REPORTS_DIRECTORY,
+                                   f"interval_report_{params['interval_num']}.html"))
+            page.pdf(path=os.path.join(constants.OBJECTS + params['object'], constants.REPORTS_DIRECTORY,
+                                       f"interval_report_{params['interval_num']}.pdf"),
+                     format='A3',
+                     margin={'top': '0mm', 'right': '0mm', 'bottom': '0mm', 'left': '0mm'},
+                     scale=1.0
+                     )
+            browser.close()
+    except Exception as html_to_pdf:
+        logger.error(html_to_pdf)
+        return {'error': str(html_to_pdf)}
+
+    socketio.emit("setPercentCommonReport", 95, to=params['sid'])
 
     return {'status': 'interval report'}

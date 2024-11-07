@@ -121,6 +121,17 @@ def get_bootstrap_js():
     return send_from_directory(constants.STATIC_BOOTSTRAP_JS_DIRECTORY, 'bootstrap.bundle.min.js')
 
 
+@app.route('/d3/dist/d3.js')
+def get_d3_js():
+    """
+
+    :return:
+    """
+    logger.info(f"get_d3_js()")
+    logger.info(f"get script {constants.STATIC_D3_JS_DIRECTORY}d3.js")
+    return send_from_directory(constants.STATIC_D3_JS_DIRECTORY, 'd3.js')
+
+
 @app.route('/plotly.js-dist-min/plotly.js')
 def get_plotly_js():
     """
@@ -140,6 +151,14 @@ def get_common_report_html():
                                   f"common_report_{object_selected}.html"))
 
 
+@app.route("/common_report.pdf")
+def get_common_report_pdf():
+    logger.info("get_common_report_pdf()")
+    object_selected = request.args.get('objectSelected', type=str)
+    return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
+                                  f"common_report_{object_selected}.pdf"))
+
+
 @app.route("/interval_report.html")
 def get_interval_report_html():
     logger.info("get_interval_report_html()")
@@ -148,6 +167,16 @@ def get_interval_report_html():
     active_interval = request.args.get('activeInterval', type=int)
     return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
                                   f"interval_report_{active_interval}.html"))
+
+
+@app.route("/interval_report.pdf")
+def get_interval_report_pdf():
+    logger.info("get_interval_report_pdf()")
+    object_selected = request.args.get('objectSelected', type=str)
+    group_selected = request.args.get('groupSelected', type=int)
+    active_interval = request.args.get('activeInterval', type=int)
+    return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
+                                  f"interval_report_{active_interval}.pdf"))
 
 
 @app.route('/api/init_sidebar/', methods=['GET'])
