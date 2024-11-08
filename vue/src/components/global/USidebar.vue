@@ -1,5 +1,5 @@
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { SidebarMenu } from 'vue-sidebar-menu'
 
@@ -11,7 +11,6 @@ import { initSidebar, updateSidebar, startCommonReport } from '../../stores'
 
 import { socket } from '../../socket'
 import axios from 'axios'
-import jsPDF from 'jspdf'
 
 export default {
   name: 'USidebar',

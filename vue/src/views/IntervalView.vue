@@ -1,5 +1,5 @@
 <script>
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ref, onMounted, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -70,7 +70,6 @@ export default {
           .get(URL + '/interval_report.html', {
             params: {
               objectSelected: object.value,
-              groupSelected: group.value,
               activeInterval: activeInterval.value,
             },
           })
@@ -94,7 +93,6 @@ export default {
           .get(URL + '/interval_report.pdf', {
             params: {
               objectSelected: object.value,
-              groupSelected: group.value,
               activeInterval: activeInterval.value,
             },
             responseType: 'blob',

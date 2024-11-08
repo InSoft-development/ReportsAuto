@@ -7,13 +7,6 @@
                     <div id="interval-chart-{{ chart["id"] }}"></div>
                 </div>
             </div>
-<!--        <div class="row">-->
-<!--            <div class="col">-->
-<!--                <div>-->
-<!--                    <img id="jpg-export-{{ chart["id"] }}"></img>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
         </div>
     </div>
 </div>
@@ -29,20 +22,9 @@
 
     const layout{{ chart["variablePostfix"] }} = {{ chart["layout"] }}
 
-    // let img_jpg{{ chart["variablePostfix"] }} = d3.select('#jpg-export-{{ chart["id"] }}')
-
     Plotly.newPlot("interval-chart-{{ chart["id"] }}",
         data{{ chart["variablePostfix"] }}, layout{{ chart["variablePostfix"] }},
     plotlyConfig{{ chart["variablePostfix"] }})
-    // .then(
-    //     function (gd) {
-    //         Plotly.toImage(gd,{height:300,width:300}).then(
-    //             function (url) {
-    //                 img_jpg{{ chart["variablePostfix"] }}.attr("src", url)
-    //             }
-    //         )
-    //     }
-    // )
 </script>
 
 <style>

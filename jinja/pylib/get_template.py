@@ -188,8 +188,8 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
                                        f"common_report_{params['object']}.pdf"),
                      format='A3',
                      margin={'top': '0mm', 'right': '0mm', 'bottom': '0mm', 'left': '0mm'},
-                     scale=1.0
-                     )
+                     scale=1.0,
+                     landscape=False)
             browser.close()
     except Exception as html_to_pdf:
         logger.error(html_to_pdf)
@@ -336,8 +336,8 @@ def get_render_interval_report(socketio: SocketIO, slices: DataFrame, roll: Data
                                        f"interval_report_{params['interval_num']}.pdf"),
                      format='A3',
                      margin={'top': '0mm', 'right': '0mm', 'bottom': '0mm', 'left': '0mm'},
-                     scale=1.0
-                     )
+                     scale=1.0,
+                     landscape=False)
             browser.close()
     except Exception as html_to_pdf:
         logger.error(html_to_pdf)

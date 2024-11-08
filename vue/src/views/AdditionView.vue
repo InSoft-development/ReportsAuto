@@ -1,7 +1,5 @@
 <script>
-import { ref, reactive, computed, onMounted, toRef, toRefs, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-
 import { useApplicationStore } from '../stores/applicationStore'
 
 export default {

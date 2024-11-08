@@ -1,11 +1,9 @@
 <script>
-import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
-import { ref, onMounted, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { useApplicationStore } from './stores/applicationStore'
-
-// import { socket } from './socket'
 
 export default {
   setup() {

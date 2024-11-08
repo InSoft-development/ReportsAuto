@@ -69,7 +69,7 @@ report_greenlet = None
 def connect() -> None:
     """
     Процедура регистрирует присоединение нового клиента и открытие сокета
-    :return:
+    :return: None
     """
     clients[request.sid] = request.sid
     logger.info("connect")
@@ -80,7 +80,7 @@ def connect() -> None:
 def disconnect() -> None:
     """
     Процедура регистрирует разъединение клиента и закрытие сокета
-    :return:
+    :return: None
     """
     del clients[request.sid]
     logger.info("disconnect")
@@ -91,11 +91,20 @@ def disconnect() -> None:
 @app.route("/<string:path>")
 @app.route("/<path:path>")
 def catch_all(path):
+    """
+    Функция посылки index.html
+    :param path: путь URL, начинаюющийся с /
+    :return: index.html
+    """
     return app.send_static_file("index.html")
 
 
 @app.route('/api_urls.js')
 def get_api_urls_js():
+    """
+    Функция посылки js файла с URL бэкенда
+    :return: ./web/api_urls.js
+    """
     return send_file('./web/api_urls.js')
 
 
@@ -121,22 +130,11 @@ def get_bootstrap_js():
     return send_from_directory(constants.STATIC_BOOTSTRAP_JS_DIRECTORY, 'bootstrap.bundle.min.js')
 
 
-@app.route('/d3/dist/d3.js')
-def get_d3_js():
-    """
-
-    :return:
-    """
-    logger.info(f"get_d3_js()")
-    logger.info(f"get script {constants.STATIC_D3_JS_DIRECTORY}d3.js")
-    return send_from_directory(constants.STATIC_D3_JS_DIRECTORY, 'd3.js')
-
-
 @app.route('/plotly.js-dist-min/plotly.js')
 def get_plotly_js():
     """
-    Функция запроса скрипта plotly.min.js
-    :return: Возвращает скрипт plotly.min.js в html
+    Функция запроса скрипта plotly.js
+    :return: Возвращает скрипт plotly.js в html
     """
     logger.info(f"get_plotly_js()")
     logger.info(f"get script {constants.STATIC_PLOTLY_JS_DIRECTORY}plotly.js")
@@ -145,6 +143,10 @@ def get_plotly_js():
 
 @app.route("/common_report.html")
 def get_common_report_html():
+    """
+    Функция посылки общего отчета html по всей группе
+    :return: Возвращает отчет в виде интерактивного html
+    """
     logger.info("get_common_report_html()")
     object_selected = request.args.get('objectSelected', type=str)
     return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
@@ -153,6 +155,10 @@ def get_common_report_html():
 
 @app.route("/common_report.pdf")
 def get_common_report_pdf():
+    """
+    Функция посылки общего отчета html по всей группе
+    :return: Возвращает отчет в виде pdf
+    """
     logger.info("get_common_report_pdf()")
     object_selected = request.args.get('objectSelected', type=str)
     return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
@@ -161,9 +167,12 @@ def get_common_report_pdf():
 
 @app.route("/interval_report.html")
 def get_interval_report_html():
+    """
+    Функция посылки отчета html по интервалу
+    :return: Возвращает отчет в виде интерактивного html
+    """
     logger.info("get_interval_report_html()")
     object_selected = request.args.get('objectSelected', type=str)
-    group_selected = request.args.get('groupSelected', type=int)
     active_interval = request.args.get('activeInterval', type=int)
     return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
                                   f"interval_report_{active_interval}.html"))
@@ -171,9 +180,12 @@ def get_interval_report_html():
 
 @app.route("/interval_report.pdf")
 def get_interval_report_pdf():
+    """
+    Функция посылки отчета pdf по интервалу
+    :return: Возвращает отчет в виде pdf
+    """
     logger.info("get_interval_report_pdf()")
     object_selected = request.args.get('objectSelected', type=str)
-    group_selected = request.args.get('groupSelected', type=int)
     active_interval = request.args.get('activeInterval', type=int)
     return send_file(os.path.join(constants.OBJECTS + object_selected, constants.REPORTS_DIRECTORY,
                                   f"interval_report_{active_interval}.pdf"))
@@ -317,6 +329,9 @@ def interval_detection(post_processing: dict) -> Dict[str, str]:
         p_get_interval = None
         return {'causeException': f"код завершения процесса {return_code}", 'status': 'success'}
     routine.remove_recursively_objects_directory(constants.OBJECTS_BACKUP)
+
+    # Удаляем старые html и pdf отчеты и создаем заново директорию reports в objects
+    routine.remove_reports(constants.OBJECTS)
     p_get_interval = None
     return {'status': 'success'}
 

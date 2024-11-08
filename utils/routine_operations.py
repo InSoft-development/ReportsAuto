@@ -1,4 +1,5 @@
 import re
+import os
 import shutil
 import errno
 
@@ -68,6 +69,15 @@ def backup_recovery(config_path: str, config: dict, src_backup: str, dest_recove
     remove_recursively_objects_directory(src_backup)
 
     return config
+
+
+def remove_reports(objects_dir: str) -> None:
+    for object_directory in os.listdir(objects_dir):
+        report_directory_path = os.path.join(objects_dir, object_directory, 'reports')
+        logger.warning(f"removing {report_directory_path}")
+        remove_recursively_objects_directory(report_directory_path)
+        os.mkdir(report_directory_path)
+        logger.success(f"removed {report_directory_path}")
 
 
 def define_additional_signals(kks_with_groups: pd.DataFrame,
@@ -522,6 +532,36 @@ def fill_plotly_histogram(loss: pd.DataFrame, threshold_short: int, threshold_lo
                     'color': '#9467bd',
                     'layer': 'below'
                 }
+            }
+        ],
+        'annotations': [
+            {
+                'showarrow': False,
+                'text': 'threshold_short',
+                'font': {
+                    'color': '#2ca02c',
+                    'size': 8
+                },
+                'x': partition[dist_cdf_list.index(x_short)],
+                'xref': 'x',
+                'xanchor': 'left' if partition[dist_cdf_list.index(x_short)] > partition[dist_cdf_list.index(x_long)]
+                else 'right',
+                'y': 0,
+                'yref': 'paper'
+            },
+            {
+                'showarrow': False,
+                'text': 'threshold_long',
+                'font': {
+                    'color': '#9467bd',
+                    'size': 8
+                },
+                'x': partition[dist_cdf_list.index(x_long)],
+                'xref': 'x',
+                'xanchor': 'right' if partition[dist_cdf_list.index(x_short)] > partition[dist_cdf_list.index(x_long)]
+                else 'left',
+                'y': 0,
+                'yref': 'paper'
             }
         ],
         'showlegend': False,

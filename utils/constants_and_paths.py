@@ -46,7 +46,6 @@ REPORTS_DIRECTORY = f'reports{os.sep}'
 STATIC_DIRECTORY = f'static{os.sep}'
 STATIC_BOOTSTRAP_CSS_DIRECTORY = f'{STATIC_DIRECTORY}bootstrap{os.sep}dist{os.sep}css{os.sep}'
 STATIC_BOOTSTRAP_JS_DIRECTORY = f'{STATIC_DIRECTORY}bootstrap{os.sep}dist{os.sep}js{os.sep}'
-STATIC_D3_JS_DIRECTORY = f'{STATIC_DIRECTORY}d3{os.sep}dist{os.sep}'
 STATIC_PLOTLY_JS_DIRECTORY = f'{STATIC_DIRECTORY}plotly.js-dist{os.sep}'
 
 WEB_DIR = f'web{os.sep}'

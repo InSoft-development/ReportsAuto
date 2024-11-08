@@ -1,16 +1,12 @@
 <script>
 import {
   ref,
-  reactive,
-  computed,
   onMounted,
   toRef,
-  toRefs,
   onUnmounted,
   onBeforeUnmount,
 } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
-import { storeToRefs } from 'pinia'
 
 import { useApplicationStore } from '../../stores/applicationStore'
 
@@ -29,11 +25,6 @@ export default {
   },
   emits: ['closeDialog', 'redirect'],
   setup(props, context) {
-    // Инициализация хранилища pinia
-    const applicationStore = useApplicationStore()
-    // Оборачиваем объеты хранилище в реактивные ссылки
-    // Ограничения параметров сглаживания и "топовых" датчиков пост обработки
-    // const {  } = storeToRefs(applicationStore)
     // Ссылка видимости диалога на проп для сохранениея реактивности
     const visibleRef = toRef(props, 'visible')
     const closeDialog = async () => {
