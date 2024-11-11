@@ -21,6 +21,7 @@ export default {
   setup(props, context) {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
+    const { commonReportSettings } = applicationStore
     // Оборачиваем объеты хранилище в реактивные ссылки
     const { loadStateSidebar, collapsed, sidebarWidth } =
       storeToRefs(applicationStore)
@@ -79,7 +80,11 @@ export default {
       percentCommonReport.value = 0
       loadStateSidebar.value = true
       commonReportActive.value = true
-      let status = await startCommonReport(objectSelected, groupSelected)
+      let status = await startCommonReport(
+        objectSelected,
+        groupSelected,
+        commonReportSettings,
+      )
       if (status !== 'error') {
         const URL = window.api.url
         // Загрузка файла html

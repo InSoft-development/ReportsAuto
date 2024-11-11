@@ -31,7 +31,7 @@ import jinja.pylib.get_template as template
 from loguru import logger
 import gevent
 
-from typing import Dict, List
+from typing import Dict, List, Union
 
 VERSION = '1.0.0'
 
@@ -448,10 +448,10 @@ def update_plotly_histogram() -> Response:
 
 
 @socketio.on('/api/common_report/')
-def common_report(object_selected: str, group_selected: int) -> Dict[str, str]:
+def common_report(object_selected: str, group_selected: int, settings: Dict[str, Union[str, bool]]) -> Dict[str, str]:
     global slices_df, roll_df, loss_df, kks_with_groups
     sid = request.sid
-    logger.info(f"common_report({object_selected}, {group_selected})")
+    logger.info(f"common_report({object_selected}, {group_selected}, {settings})")
 
     params = {
         'url': f"http://{args.host}:{args.port}/",
@@ -462,18 +462,20 @@ def common_report(object_selected: str, group_selected: int) -> Dict[str, str]:
         'power': config[object_selected]['power_index'],
         'palette': constants.PALETTE,
         'threshold_short': config['post_processing']['threshold_short'],
-        'threshold_long': config['post_processing']['threshold_long']
+        'threshold_long': config['post_processing']['threshold_long'],
+        'pdf': settings
     }
 
     return template.get_render_common_report(socketio, slices_df, roll_df, loss_df, kks_with_groups, params)
 
 
 @socketio.on('/api/interval_report/')
-def interval_report(object_selected: str, group_selected: int, interval_selected: int,
-                    tops_order: List[str], others_order: List[str], active_signals: Dict[str, Dict[str, List[str]]]) -> Dict[str, str]:
+def interval_report(object_selected: str, group_selected: int, settings: Dict[str, Union[str, bool]],
+                    interval_selected: int, tops_order: List[str], others_order: List[str],
+                    active_signals: Dict[str, Dict[str, List[str]]]) -> Dict[str, str]:
     global slices_df, roll_df, kks_with_groups
     sid = request.sid
-    logger.info(f"interval_report({object_selected}, {group_selected}, {interval_selected}, "
+    logger.info(f"interval_report({object_selected}, {group_selected}, {settings}, {interval_selected}, "
                 f"{tops_order}, {others_order}, {active_signals})")
 
     params = {
@@ -484,7 +486,8 @@ def interval_report(object_selected: str, group_selected: int, interval_selected
         'interval': json_interval,
         'interval_num': interval_selected,
         'power': config[object_selected]['power_index'],
-        'palette': constants.PALETTE
+        'palette': constants.PALETTE,
+        'pdf': settings
     }
 
     # Упорядочивание по списку многоосевых графиков

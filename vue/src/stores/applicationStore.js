@@ -36,12 +36,12 @@ export const useApplicationStore = defineStore('ApplicationStore', () => {
 
   const commonReportSettings = reactive({
     formatRadio: 'A3',
-    landscape: false
+    landscape: false,
   })
 
   const intervalReportSettings = reactive({
     formatRadio: 'A3',
-    landscape: false
+    landscape: false,
   })
 
   return {
@@ -54,6 +54,6 @@ export const useApplicationStore = defineStore('ApplicationStore', () => {
     activeSignals,
     setActiveSignals,
     commonReportSettings,
-    intervalReportSettings
+    intervalReportSettings,
   }
 })

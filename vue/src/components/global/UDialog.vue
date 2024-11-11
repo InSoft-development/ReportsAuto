@@ -1,11 +1,5 @@
 <script>
-import {
-  ref,
-  onMounted,
-  toRef,
-  onUnmounted,
-  onBeforeUnmount,
-} from 'vue'
+import { ref, onMounted, toRef, onUnmounted, onBeforeUnmount } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 
 import { useApplicationStore } from '../../stores/applicationStore'

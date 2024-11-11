@@ -14,7 +14,7 @@ export default {
   setup() {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
-    const { activeSignals } = applicationStore
+    const { activeSignals, intervalReportSettings } = applicationStore
     // Оборачиваем объеты хранилище в реактивные ссылки
     const { object, group, intervals, loadStateSidebar } =
       storeToRefs(applicationStore)
@@ -53,6 +53,7 @@ export default {
       let status = await startIntervalReport(
         object,
         group,
+        intervalReportSettings,
         activeInterval,
         topGroupSignals,
         otherGroupSignals,

@@ -37,13 +37,18 @@ export async function cancelIntervalDetection() {
   })
 }
 
-export async function startCommonReport(objectSelected, groupSelected) {
+export async function startCommonReport(
+  objectSelected,
+  groupSelected,
+  commonReportSettings,
+) {
   let status = ''
   await new Promise(resolve => {
     socket.emit(
       '/api/common_report/',
       objectSelected.value,
       groupSelected.value,
+      commonReportSettings,
       res => {
         resolve(res)
         if ('error' in res) {
@@ -59,6 +64,7 @@ export async function startCommonReport(objectSelected, groupSelected) {
 export async function startIntervalReport(
   objectSelected,
   groupSelected,
+  intervalReportSettings,
   intervalSelected,
   topGroupSignals,
   otherGroupSignals,
@@ -70,6 +76,7 @@ export async function startIntervalReport(
       '/api/interval_report/',
       objectSelected.value,
       groupSelected.value,
+      intervalReportSettings,
       intervalSelected.value,
       topGroupSignals.value.map(({ kks }) => kks),
       otherGroupSignals.value.map(({ kks }) => kks),

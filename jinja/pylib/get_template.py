@@ -29,7 +29,7 @@ def get_unfilled_html_from_source(content_for_render, url):
 
 def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFrame, loss: DataFrame,
                              kks_with_groups: DataFrame,
-                             params: Dict[str, Union[str, int, List[dict], Dict[str, Union[str, List[str]]]]]) \
+                             params: Dict[str, Union[str, int, List[dict], Dict[str, Union[str, bool, List[str]]]]]) \
         -> Dict[str, str]:
     logger.info(f"get_render_common_report({socketio}, slices, roll, kks_with_groups, {params})")
 
@@ -186,10 +186,10 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
                                    f"common_report_{params['object']}.html"))
             page.pdf(path=os.path.join(constants.OBJECTS + params['object'], constants.REPORTS_DIRECTORY,
                                        f"common_report_{params['object']}.pdf"),
-                     format='A3',
+                     format=params['pdf']['formatRadio'],
                      margin={'top': '0mm', 'right': '0mm', 'bottom': '0mm', 'left': '0mm'},
                      scale=1.0,
-                     landscape=False)
+                     landscape=params['pdf']['landscape'])
             browser.close()
     except Exception as html_to_pdf:
         logger.error(html_to_pdf)
@@ -202,7 +202,7 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
 
 def get_render_interval_report(socketio: SocketIO, slices: DataFrame, roll: DataFrame, kks_with_groups: DataFrame,
                                tops: Dict[str, List[str]], others: Dict[str, List[str]],
-                               params: Dict[str, Union[str, int, List[dict], Dict[str, Union[str, List[str]]]]]) \
+                               params: Dict[str, Union[str, int, bool, List[dict], Dict[str, Union[str, List[str]]]]]) \
         -> Dict[str, str]:
     logger.info(f"get_render_common_report({socketio}, slices, roll, kks_with_groups, {tops}, {others}, {params})")
 
@@ -334,10 +334,10 @@ def get_render_interval_report(socketio: SocketIO, slices: DataFrame, roll: Data
                                    f"interval_report_{params['interval_num']}.html"))
             page.pdf(path=os.path.join(constants.OBJECTS + params['object'], constants.REPORTS_DIRECTORY,
                                        f"interval_report_{params['interval_num']}.pdf"),
-                     format='A3',
+                     format=params['pdf']['formatRadio'],
                      margin={'top': '0mm', 'right': '0mm', 'bottom': '0mm', 'left': '0mm'},
                      scale=1.0,
-                     landscape=False)
+                     landscape=params['pdf']['landscape'])
             browser.close()
     except Exception as html_to_pdf:
         logger.error(html_to_pdf)
