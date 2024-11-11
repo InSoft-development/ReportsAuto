@@ -22,7 +22,7 @@ export default {
     activeInterval: Number(),
     disabled: Boolean,
   },
-  setup(props, context) {
+  setup(props) {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     const { activeSignals, setActiveSignals } = applicationStore

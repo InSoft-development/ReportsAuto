@@ -3,6 +3,11 @@ import { socket } from '../socket'
 
 const URL = window.api.url
 
+/**
+ * Процедура запуска выделения интервалов
+ * @param postProcessing ref ссылка на объект постобработки
+ * @returns {Promise<void>}
+ */
 export async function startIntervalDetection(postProcessing) {
   await new Promise(resolve => {
     socket.emit('/api/interval_detection/', postProcessing.value, res => {
@@ -27,6 +32,10 @@ export async function startIntervalDetection(postProcessing) {
   })
 }
 
+/**
+ * Процедура отмены выделения интервалов
+ * @returns {Promise<void>}
+ */
 export async function cancelIntervalDetection() {
   await new Promise(resolve => {
     socket.emit('/api/cancel_interval_detection/', res => {
@@ -37,6 +46,13 @@ export async function cancelIntervalDetection() {
   })
 }
 
+/**
+ * Функция построения общего отчета по группе
+ * @param objectSelected ref ссылка выбранного объекта
+ * @param groupSelected ref ссылка выбранной группы
+ * @param commonReportSettings объект параметров рендера pdf отчета по группе
+ * @returns {Promise<string>} статус операции рендеринга
+ */
 export async function startCommonReport(
   objectSelected,
   groupSelected,
@@ -61,6 +77,17 @@ export async function startCommonReport(
   return status
 }
 
+/**
+ * Функция построения отчета по интервалу
+ * @param objectSelected ref ссылка выбранного объекта
+ * @param groupSelected ref ссылка выбранной группы
+ * @param intervalReportSettings объект параметров рендера pdf отчета интервала
+ * @param intervalSelected ref ссылка выбранного интервала
+ * @param topGroupSignals ref ссылка на массив объектов топовых датчиков
+ * @param otherGroupSignals ref ссылка на массив объектов остальных датчиков группы
+ * @param activeSignals объект активных датчиков и выбранных для отображения на многоосевых графиков сигналов
+ * @returns {Promise<string>} статус операции рендеринга
+ */
 export async function startIntervalReport(
   objectSelected,
   groupSelected,

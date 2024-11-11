@@ -41,7 +41,6 @@ PALETTE = {
 }
 
 REPORTS_DIRECTORY = f'reports{os.sep}'
-# REPORTS_DIRECTORY_PERIODS = f'{REPORTS_DIRECTORY}periods{os.sep}'
 
 STATIC_DIRECTORY = f'static{os.sep}'
 STATIC_BOOTSTRAP_CSS_DIRECTORY = f'{STATIC_DIRECTORY}bootstrap{os.sep}dist{os.sep}css{os.sep}'

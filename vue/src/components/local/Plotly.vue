@@ -15,7 +15,7 @@ export default {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     // Оборачиваем объеты хранилище в реактивные ссылки
-    const { object, group, collapsed } = storeToRefs(applicationStore)
+    const { collapsed } = storeToRefs(applicationStore)
 
     // Ref-ссылка на div блок с Plotly
     const plotly = ref(null)

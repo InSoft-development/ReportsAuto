@@ -193,6 +193,10 @@ def get_interval_report_pdf():
 
 @app.route('/api/init_sidebar/', methods=['GET'])
 def init_sidebar() -> Response:
+    """
+    Функция инициализации меню sidebar: объекты, группы, интервалы
+    :return: json с инициализированными объектами, группами, интервалами
+    """
     global slices_df, kks_with_groups, roll_df, loss_df, json_interval
     logger.info(f"init_sidebar()")
     # Инициализируем исходные интервалы
@@ -211,7 +215,17 @@ def init_sidebar() -> Response:
 
 @app.route('/api/update_sidebar/', methods=['GET'])
 def update_sidebar() -> Response:
+    """
+    Функция обновления элементов меню sidebar
+    :return: json с интервалами, группой и группами
+    """
     def update_sidebar_by_object(ob: str, gr: int) -> Response:
+        """
+        Функия обновления элементов меню sidebar при выборе другого объекта станции
+        :param ob: выбранный объект
+        :param gr: выбранная группа
+        :return: json с интервалами, группой и группами
+        """
         global slices_df, kks_with_groups, roll_df, loss_df, json_interval
         logger.info(f"update_sidebar_by_object({ob}, {gr})")
         # Загружаем необходимые pandas фреймы при смене объекта
@@ -229,6 +243,12 @@ def update_sidebar() -> Response:
         return jsonify(intervals=intervals, group=group, groups=groups)
 
     def update_sidebar_by_group(ob: str, gr: int) -> Response:
+        """
+        Функия обновления элементов меню sidebar при выборе другой группы
+        :param ob: выбранный объект
+        :param gr: выбранная группа
+        :return: json с интервалами, группой и группами
+        """
         global roll_df, loss_df, json_interval
         logger.info(f"update_sidebar_by_group({ob}, {gr})")
         # Загружаем необходимые pandas фреймы при смене группы
@@ -260,12 +280,21 @@ def update_sidebar() -> Response:
 
 @app.route('/api/init_post_processing/', methods=['GET'])
 def init_post_processing() -> Response:
+    """
+    Функция иницицализации объекта параметров постобработки
+    :return: json параметров постобработки
+    """
     logger.info(f"init_post_processing()")
     return jsonify(postProcessing=routine.dict_to_lower_camel_case(config['post_processing']))
 
 
 @socketio.on('/api/interval_detection/')
 def interval_detection(post_processing: dict) -> Dict[str, str]:
+    """
+    Функция выделения интервалов
+    :param post_processing: json объект параметров постобработки
+    :return: json объект со статусом выполненной операции: success - успешно, error - ошибка
+    """
     global config, config_backup, p_get_interval, sid_proc
     sid = request.sid
     if p_get_interval is not None:
@@ -338,6 +367,10 @@ def interval_detection(post_processing: dict) -> Dict[str, str]:
 
 @socketio.on('/api/cancel_interval_detection/')
 def interval_detection_cancel() -> Dict[str, str]:
+    """
+    Функция отмены выделения интервалов
+    :return: json объект со статусом выполненной операции: success - успешно, error - ошибка
+    """
     global config, p_get_interval, sid_proc
     sid = request.sid
 
@@ -354,7 +387,15 @@ def interval_detection_cancel() -> Dict[str, str]:
 
 @app.route('/api/update_plotly_interval/', methods=['GET'])
 def update_plotly_interval() -> Response:
+    """
+    Функция обновления данных графика вероятности
+    :return: json графика с заполненными объектами data и layout
+    """
     def update_plotly_interval_all() -> Response:
+        """
+        Функция обновления данных графика вероятности на всем промежутке фрейма
+        :return: json графика вероятности на всем промежутки фрейма с заполненными объектами data и layout
+        """
         global roll_df, json_interval
         logger.info(f"update_plotly_interval_all()")
         # Заполняем данные графика
@@ -362,6 +403,11 @@ def update_plotly_interval() -> Response:
         return jsonify(data=data, layout=layout)
 
     def update_plotly_interval_specify(interval_num: int) -> Response:
+        """
+        Функция обновления данных графика вероятности определенного интервала
+        :param interval_num: номер интервала в списке json_interval соответственно
+        :return: json графика вероятности определенного интервала с заполненными объектами data и layout
+        """
         global roll_df, json_interval
         logger.info(f"update_plotly_interval_specify({interval_num})")
         data, layout = routine.fill_plotly_interval_specify(roll_df, object_selected, group_selected, interval_num,
@@ -378,6 +424,10 @@ def update_plotly_interval() -> Response:
 
 @app.route('/api/get_signals/', methods=['GET'])
 def get_signals() -> Response:
+    """
+    Функция получения объектов сигналов: kks, описание
+    :return: json массивов объектов сигналов c kks и описанием топовых и остальных сигналов группы
+    """
     object_selected = request.args.get('objectSelected', type=str)
     group_selected = request.args.get('groupSelected', type=int)
     interval_selected = request.args.get('intervalSelected', type=str)
@@ -397,6 +447,10 @@ def get_signals() -> Response:
 
 @app.route('/api/get_additional_signals/', methods=['GET'])
 def get_additional_signals() -> Response:
+    """
+    Функция получения объектов сигналов для определения чекбоксов многоосевых графиков
+    :return: json массив объектов сигналов c kks, описанием и фиксированным цветом
+    """
     main_signal_kks = request.args.get('mainSignal', type=str)
     object_selected = request.args.get('objectSelected', type=str)
 
@@ -410,6 +464,10 @@ def get_additional_signals() -> Response:
 
 @app.route('/api/update_plotly_multiple_axes/', methods=['GET'])
 def update_plotly_multiple_axes() -> Response:
+    """
+    Функция обновления данных многоосевого графика
+    :return: json многоосевого графика с заполненными объектами data и layout
+    """
     global slices_df, json_interval
     main_signal_kks = request.args.get('mainSignal', type=str)
     object_selected = request.args.get('objectSelected', type=str)
@@ -437,6 +495,10 @@ def update_plotly_multiple_axes() -> Response:
 
 @app.route('/api/update_plotly_histogram/', methods=['GET'])
 def update_plotly_histogram() -> Response:
+    """
+    Функция обновления данных гистограммы распределния
+    :return: json гистограммы распределния с заполненными объектами data и layout
+    """
     global loss_df
     logger.info(f"update_plotly_histogram()")
 
@@ -449,6 +511,13 @@ def update_plotly_histogram() -> Response:
 
 @socketio.on('/api/common_report/')
 def common_report(object_selected: str, group_selected: int, settings: Dict[str, Union[str, bool]]) -> Dict[str, str]:
+    """
+    Функия построения и рендера отчета по всем интервалам группы объекта
+    :param object_selected: выбранный объект
+    :param group_selected: выбранная группа
+    :param settings: объект параметров рендера pdf отчета
+    :return: статус операции рендеринга html шаблона и pdf отчета по всем интервалам группы объекта
+    """
     global slices_df, roll_df, loss_df, kks_with_groups
     sid = request.sid
     logger.info(f"common_report({object_selected}, {group_selected}, {settings})")
@@ -473,6 +542,17 @@ def common_report(object_selected: str, group_selected: int, settings: Dict[str,
 def interval_report(object_selected: str, group_selected: int, settings: Dict[str, Union[str, bool]],
                     interval_selected: int, tops_order: List[str], others_order: List[str],
                     active_signals: Dict[str, Dict[str, List[str]]]) -> Dict[str, str]:
+    """
+    Функия построения и рендера отчета интервала
+    :param object_selected: выбранный объект
+    :param group_selected: выбранная группа
+    :param settings: объект параметров рендера pdf отчета
+    :param interval_selected: выбранный номер инетрвала
+    :param tops_order: список топовых датчиков в фиксированном порядке
+    :param others_order: список остальных датчиков группы в фиксированном порядке
+    :param active_signals: объект активных датчиков и выбранных для отображения на многоосевых графиков сигналов
+    :return: статус операции рендеринга html шаблона и pdf отчета интервала
+    """
     global slices_df, roll_df, kks_with_groups
     sid = request.sid
     logger.info(f"interval_report({object_selected}, {group_selected}, {settings}, {interval_selected}, "

@@ -15,7 +15,7 @@ export default {
     headerTitle: String(),
     activeInterval: Number(),
   },
-  setup(props, context) {
+  setup(props) {
     // Инициализация хранилища pinia
     const applicationStore = useApplicationStore()
     // Оборачиваем объеты хранилище в реактивные ссылки

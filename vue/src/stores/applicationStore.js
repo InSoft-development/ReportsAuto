@@ -34,11 +34,13 @@ export const useApplicationStore = defineStore('ApplicationStore', () => {
     }
   }
 
+  // reactive объект настроек формата общего отчета по группе
   const commonReportSettings = reactive({
     formatRadio: 'A3',
     landscape: false,
   })
 
+  // reactive объект настроек формата отчета по интервалу
   const intervalReportSettings = reactive({
     formatRadio: 'A3',
     landscape: false,

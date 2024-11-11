@@ -14,11 +14,14 @@ from typing import Dict, Union, List
 from flask_socketio import SocketIO
 from pandas import DataFrame
 
-# import plotly.graph_objs as go
-# import plotly.io as pio
-
 
 def get_unfilled_html_from_source(content_for_render, url):
+    """
+    Функция рендеринга html шаблона: header, content, footer
+    :param content_for_render: контент html страницы
+    :param url: url адрес сервера для получения js скриптов и css
+    :return: полностью срендеренный html
+    """
     logger.info(f"get_unfilled_html_from_source(content_for_render)")
     file_loader = FileSystemLoader(searchpath=constants.JINJA_TEMPLATE_SOURCE)
     env = Environment(loader=file_loader)
@@ -31,6 +34,16 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
                              kks_with_groups: DataFrame,
                              params: Dict[str, Union[str, int, List[dict], Dict[str, Union[str, bool, List[str]]]]]) \
         -> Dict[str, str]:
+    """
+    Функция рендеринга отчета по всем интервалам группы
+    :param socketio: объект сокета socketio для отсылки % выполнения рендера
+    :param slices: фрейм исходных данных срезов
+    :param roll: фрейм сглаженных данных вероятности (предикта)
+    :param loss: фрейм лосса
+    :param kks_with_groups: фрейм kks, групп и описания датчиков
+    :param params: словарь параметров
+    :return: json объект со статусом выполненной операции: success - успешно, error - ошибка
+    """
     logger.info(f"get_render_common_report({socketio}, slices, roll, kks_with_groups, {params})")
 
     # Рендеринг общего отчета по частям
@@ -197,13 +210,24 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
 
     socketio.emit("setPercentCommonReport", 95, to=params['sid'])
 
-    return {'status': 'common report'}
+    return {'status': 'success'}
 
 
 def get_render_interval_report(socketio: SocketIO, slices: DataFrame, roll: DataFrame, kks_with_groups: DataFrame,
                                tops: Dict[str, List[str]], others: Dict[str, List[str]],
                                params: Dict[str, Union[str, int, bool, List[dict], Dict[str, Union[str, List[str]]]]]) \
         -> Dict[str, str]:
+    """
+    Функция рендеринга отчета интервала
+    :param socketio: объект сокета socketio для отсылки % выполнения рендера
+    :param slices: фрейм исходных данных срезов
+    :param roll: фрейм сглаженных данных вероятности (предикта)
+    :param kks_with_groups: фрейм kks, групп и описания датчиков
+    :param tops: объект активных топовых датчиков и выбранных для многоосевых графиков сигналов
+    :param others: объект активных остальных датчиков группы и выбранных для многоосевых графиков сигналов
+    :param params: словарь параметров
+    :return: json объект со статусом выполненной операции: success - успешно, error - ошибка
+    """
     logger.info(f"get_render_common_report({socketio}, slices, roll, kks_with_groups, {tops}, {others}, {params})")
 
     # Рендеринг общего отчета по частям
@@ -345,4 +369,4 @@ def get_render_interval_report(socketio: SocketIO, slices: DataFrame, roll: Data
 
     socketio.emit("setPercentCommonReport", 95, to=params['sid'])
 
-    return {'status': 'interval report'}
+    return {'status': 'success'}

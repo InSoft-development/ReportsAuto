@@ -14,20 +14,40 @@ from loguru import logger
 
 
 def to_camel_case(snake_str: str) -> str:
+    """
+    Функция перевода из snake_case в camelCase
+    :param snake_str: строка в snake_case
+    :return: строка в camelCase
+    """
     return "".join(x.capitalize() for x in snake_str.lower().split("_"))
 
 
 def to_lower_camel_case(snake_str: str) -> str:
+    """
+    Функция перевода из snake_case в camelCase кроме первого символа
+    :param snake_str: строка в snake_case
+    :return: строка в camelCase
+    """
     camel_string = to_camel_case(snake_str)
     return snake_str[0].lower() + camel_string[1:]
 
 
 def to_snake_case(camel_str: str) -> str:
+    """
+    Функция перевода из camelCase в snake_case
+    :param camel_str: строка в camelCase
+    :return: строка в snake_case
+    """
     pattern = re.compile(r'(?<!^)(?=[A-Z])')
     return pattern.sub('_', camel_str).lower()
 
 
 def dict_to_lower_camel_case(snake_dict: Dict[str, int]) -> Dict[str, int]:
+    """
+    Функция перевода ключей словаря из snake_case в camelCase
+    :param snake_dict: словарь, ключи которого в snake_case
+    :return: словарь с ключами в camelCase
+    """
     camel_dict = {}
     for key in snake_dict:
         camel_dict[to_lower_camel_case(key)] = snake_dict[key]
@@ -35,6 +55,11 @@ def dict_to_lower_camel_case(snake_dict: Dict[str, int]) -> Dict[str, int]:
 
 
 def dict_to_snake_case(camel_dict: Dict[str, int]) -> Dict[str, int]:
+    """
+    Функция перевода ключей словаря из camelCase в snake_case
+    :param camel_dict: словарь, ключи которого в camelCase
+    :return: словарь с ключами в snake_case
+    """
     snake_dict = {}
     for key in camel_dict:
         snake_dict[to_snake_case(key)] = camel_dict[key]
@@ -42,6 +67,12 @@ def dict_to_snake_case(camel_dict: Dict[str, int]) -> Dict[str, int]:
 
 
 def copy_recursively_objects_directory(src: str, dest: str) -> None:
+    """
+    Процедура рекурсивного копирования директорий объектов
+    :param src: путь директории объектов
+    :param dest: путь директории для бэкапа
+    :return: None
+    """
     try:
         shutil.copytree(src, dest, dirs_exist_ok=True)
     except OSError as e:
@@ -52,10 +83,23 @@ def copy_recursively_objects_directory(src: str, dest: str) -> None:
 
 
 def remove_recursively_objects_directory(path: str) -> None:
+    """
+    Процедура рекурсивного удаления директории
+    :param path: путь директории, подлежащей удалению
+    :return: None
+    """
     shutil.rmtree(path)
 
 
 def backup_recovery(config_path: str, config: dict, src_backup: str, dest_recovery: str) -> dict:
+    """
+    Функция восстановления бэкапа исходного конфига и объекта
+    :param config_path: путь до конфига
+    :param config: объект конфига, который будет восстановлен
+    :param src_backup: путь до диретории бэкапа
+    :param dest_recovery: путь до директории, в которой нужно восстановить директории объектов
+    :return: восстановленный конфиг
+    """
     # Восстанавливаем параметры конфига
     with open(config_path, 'w') as write_file:
         yaml.dump(config, write_file)
@@ -72,6 +116,11 @@ def backup_recovery(config_path: str, config: dict, src_backup: str, dest_recove
 
 
 def remove_reports(objects_dir: str) -> None:
+    """
+    Процедура удаления директорий отчетов объектов
+    :param objects_dir: путь директории с объектами
+    :return: None
+    """
     for object_directory in os.listdir(objects_dir):
         report_directory_path = os.path.join(objects_dir, object_directory, 'reports')
         logger.warning(f"removing {report_directory_path}")
@@ -83,6 +132,15 @@ def remove_reports(objects_dir: str) -> None:
 def define_additional_signals(kks_with_groups: pd.DataFrame,
                               main_signal_kks: str, power_kks: str,
                               palette_power: str, palette_other: List[str]) -> List[Dict[str, str]]:
+    """
+    Функция определения объектов дополнительных сигналов: kks, описание, цвет
+    :param kks_with_groups: фрейм kks, групп и описания датчиков
+    :param main_signal_kks: kks основного датчика в многоосевом графике
+    :param power_kks: kks датчика мощности из конфига
+    :param palette_power: фиксированный цвет датчика мощности
+    :param palette_other: фиксированная палетта для остальных датчиков группы
+    :return: массив объектов дополнительных сигналов: kks, описание, цвет
+    """
     clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
              (kks_with_groups['kks'] != power_kks)
     clause_for_power_descr = kks_with_groups['kks'] == power_kks
@@ -106,6 +164,17 @@ def define_additional_signals(kks_with_groups: pd.DataFrame,
 def define_signals(kks_with_groups: pd.DataFrame, main_signal_kks: str, power_kks: str,
                    palette_main: str, palette_power: str, palette_other: List[str],
                    active_signals: List[str] = None) -> List[Dict[str, str]]:
+    """
+    Функция определения объектов сигналов: kks, описание, цвет
+    :param kks_with_groups: фрейм kks, групп и описания датчиков
+    :param main_signal_kks: kks основного датчика в многоосевом графике
+    :param power_kks: kks датчика мощности из конфига
+    :param palette_main: фиксированный цвет датчика основного сигнала многоосевого графика
+    :param palette_power: фиксированный цвет датчика мощности
+    :param palette_other: фиксированная палетта для остальных датчиков группы
+    :param active_signals: список активных сигналов многоосевого графика
+    :return: массив объектов дополнительных сигналов: kks, описание, цвет
+    """
     clause = (kks_with_groups['group'] == 0) & (kks_with_groups['kks'] != main_signal_kks) & \
              (kks_with_groups['kks'] != power_kks)
     clause_for_power_descr = kks_with_groups['kks'] == power_kks
@@ -139,6 +208,14 @@ def define_signals(kks_with_groups: pd.DataFrame, main_signal_kks: str, power_kk
 
 def fill_plotly_interval_all(roll_df: pd.DataFrame, object_selected: str, group_selected: int,
                              json_interval: List[dict]) -> Tuple[List[dict], dict]:
+    """
+    Функция заполнения data и layout графика вероятности на всем фрейме
+    :param roll_df: фрейм сглаженных данных вероятности (предикта)
+    :param object_selected: выбранный объект
+    :param group_selected: выбранная группа
+    :param json_interval: json с выделенными интервалами
+    :return: data и layout графика вероятности на всем фрейме
+    """
     data = [{
         'x': roll_df.index.strftime("%Y-%m-%d %H:%M:%S").tolist(),
         'y': roll_df['target_value'].tolist(),
@@ -174,6 +251,15 @@ def fill_plotly_interval_all(roll_df: pd.DataFrame, object_selected: str, group_
 
 def fill_plotly_interval_specify(roll_df: pd.DataFrame, object_selected: str, group_selected: int,
                                  interval_num: int, json_interval: List[dict]) -> Tuple[List[dict], dict]:
+    """
+    Функция заполнения data и layout графика вероятности на интервале
+    :param roll_df: фрейм сглаженных данных вероятности (предикта)
+    :param object_selected: выбранный объект
+    :param group_selected: выбранная группа
+    :param interval_num: номер выбранного интервала
+    :param json_interval: json с выделенными интервалами
+    :return: data и layout графика вероятности на интервале
+    """
     # Достаем начальные и конечные отсчеты времени и индексы интервалов
     begin, end = json_interval[interval_num]['time']
     begin_index, end_index = json_interval[interval_num]['index']
@@ -225,6 +311,16 @@ def fill_plotly_interval_specify(roll_df: pd.DataFrame, object_selected: str, gr
 def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: List[str],
                            active_signals: List[str], json_interval: List[dict],
                            params: Dict[str, Union[int, str, dict]]) -> Tuple[List[dict], dict]:
+    """
+    Функция заполнения data и layout многоосевого графика
+    :param slice_df: фрейм исходных данных срезов
+    :param interval_num: номер выбранного интервала
+    :param signals: список сигналов
+    :param active_signals: список активных сигналов
+    :param json_interval: json с выделенными интервалами
+    :param params: словарь с параметрами
+    :return: data и layout многоосевого графика
+    """
     # Достаем начальные и конечные отсчеты времени и индексы интервалов
     begin, end = json_interval[interval_num]['time']
     begin_index, end_index = json_interval[interval_num]['index']
@@ -469,6 +565,13 @@ def fill_plotly_multi_axes(slice_df: pd.DataFrame, interval_num: int, signals: L
 
 
 def fill_plotly_histogram(loss: pd.DataFrame, threshold_short: int, threshold_long: int) -> Tuple[List[dict], dict]:
+    """
+    Функция заполнения data и layout гистограммы
+    :param loss: фрейм лосса
+    :param threshold_short: порог по вероятности выделения коротких интервалов
+    :param threshold_long: порог по вероятности выделения длинных интервалов
+    :return: data и layout гистограммы
+    """
     # Вычисляем средний loss по датчикам в каждом отсчете времени, предварительно заполнив Nan нулями
     loss_mean = loss.fillna(0).mean(axis=1, skipna=True).values.tolist()
 

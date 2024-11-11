@@ -4,6 +4,15 @@ import axios from 'axios'
 
 const URL = window.api.url
 
+/**
+ * Процедура инициализации меню sidebar
+ * @param objectSelected ref ссылка выбранного объекта
+ * @param objectOptions ref ссылка доступных для выбора объектов
+ * @param groupSelected ref ссылка выбранной группы
+ * @param groupOptions ref ссылка доступных для выбора групп
+ * @param sidebarMenu ref ссылка на объект sidebar
+ * @returns {Promise<void>}
+ */
 export async function initSidebar(
   objectSelected,
   objectOptions,
@@ -64,6 +73,15 @@ export async function initSidebar(
     })
 }
 
+/**
+ * Процедура обновления меню sidebar
+ * @param objectSelected ref ссылка выбранного объекта
+ * @param groupSelected ref ссылка выбранной группы
+ * @param groupOptions ref ссылка доступных для выбора групп
+ * @param sidebarChildInterval ref ссылка на объект интервалов в объекте sidebar
+ * @param cause причина обновления (переключение объекта станции | переключение группы )
+ * @returns {Promise<void>}
+ */
 export async function updateSidebar(
   objectSelected,
   groupSelected,
@@ -107,6 +125,11 @@ export async function updateSidebar(
     })
 }
 
+/**
+ * Процедура инициализации параметров постобработки
+ * @param postProcessing ref ссылка на объект постобработки
+ * @returns {Promise<void>}
+ */
 export async function initPostProcessing(postProcessing) {
   let url = URL + 'api/init_post_processing/'
   await axios
@@ -119,6 +142,15 @@ export async function initPostProcessing(postProcessing) {
     })
 }
 
+/**
+ * Процедура обновления данных графика вероятности на всем периоде или интервале
+ * @param data ref ссылка на объект data графика
+ * @param layout ref ссылка на объект layout графика
+ * @param objectSelected ref ссылка выбранного объекта
+ * @param groupSelected ref ссылка выбранной группы
+ * @param intervalSelected выбранный интервал (номер | 'all' - весь фрейм по умолчанию)
+ * @returns {Promise<void>}
+ */
 export async function updatePlotlyInterval(
   data,
   layout,
@@ -145,6 +177,15 @@ export async function updatePlotlyInterval(
     })
 }
 
+/**
+ * Процедура получения топовых и остальных датчиков группы
+ * @param topGroupSignals ref ссылка топовых датчиков
+ * @param otherGroupSignals ref ссылка остальных датчиков группы
+ * @param objectSelected ref ссылка выбранного объекта
+ * @param groupSelected ref ссылка выбранной группы
+ * @param intervalSelected ref ссылка выбранного интервала
+ * @returns {Promise<void>}
+ */
 export async function getTopAndOtherGroupSignals(
   topGroupSignals,
   otherGroupSignals,
@@ -171,6 +212,13 @@ export async function getTopAndOtherGroupSignals(
     })
 }
 
+/**
+ * Процудра получения дополнительных сигналов многоосевого графика
+ * @param signals ref ссылка на массив объектов сигналов
+ * @param mainSignalRef ref ссылка основного сигнала
+ * @param objectSelected ref ссылка выбранного объекта
+ * @returns {Promise<void>}
+ */
 export async function getAdditionalsSignals(
   signals,
   mainSignalRef,
@@ -193,6 +241,17 @@ export async function getAdditionalsSignals(
     })
 }
 
+/**
+ * Процедура обновления данных многоосевого графика
+ * @param data ref ссылка на объект data графика
+ * @param layout ref ссылка на объект layout графика
+ * @param mainSignalRef ref ссылка основного сигнала
+ * @param objectSelected ref ссылка выбранного объекта
+ * @param intervalSelected ref ссылка выбранного интервала
+ * @param signals ref ссылка на массив объектов сигналов
+ * @param signalsCheckbox  ref ссылка на массив выбранных чекбоксов сигналов многоосевого графика
+ * @returns {Promise<void>}
+ */
 export async function updatePlotlyMultipleAxes(
   data,
   layout,
@@ -223,6 +282,12 @@ export async function updatePlotlyMultipleAxes(
     })
 }
 
+/**
+ * Процедра обновления данных гистограммы распределения
+ * @param data ref ссылка на объект data гистограммы
+ * @param layout ref ссылка на объект layout гистограммы
+ * @returns {Promise<void>}
+ */
 export async function updatePlotlyHistogram(data, layout) {
   let url = URL + 'api/update_plotly_histogram/'
 
