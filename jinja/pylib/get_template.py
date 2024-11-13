@@ -196,7 +196,7 @@ def get_render_common_report(socketio: SocketIO, slices: DataFrame, roll: DataFr
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(os.path.join(f"file://{os.getcwd()}/{constants.OBJECTS}{params['object']}", constants.REPORTS_DIRECTORY,
-                                   f"common_report_{params['object']}.html"))
+                                   f"common_report_{params['object']}.html"), timeout=60000)
             page.pdf(path=os.path.join(constants.OBJECTS + params['object'], constants.REPORTS_DIRECTORY,
                                        f"common_report_{params['object']}.pdf"),
                      format=params['pdf']['formatRadio'],
@@ -355,7 +355,7 @@ def get_render_interval_report(socketio: SocketIO, slices: DataFrame, roll: Data
             page = browser.new_page()
             page.goto(os.path.join(f"file://{os.getcwd()}/{constants.OBJECTS}{params['object']}",
                                    constants.REPORTS_DIRECTORY,
-                                   f"interval_report_{params['interval_num']}.html"))
+                                   f"interval_report_{params['interval_num']}.html"), timeout=60000)
             page.pdf(path=os.path.join(constants.OBJECTS + params['object'], constants.REPORTS_DIRECTORY,
                                        f"interval_report_{params['interval_num']}.pdf"),
                      format=params['pdf']['formatRadio'],
