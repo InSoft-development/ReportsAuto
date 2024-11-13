@@ -328,7 +328,6 @@ def interval_detection(post_processing: dict) -> Dict[str, str]:
             if os.path.isfile(f'utils{os.sep}complete.log'):
                 with open(f'utils{os.sep}complete.log', 'r') as read_file:
                     status = read_file.readline()
-                    logger.info(status)
                     socketio.emit("setPercentIntervalDetection", int(status.strip('%')), to=sid)
     except subprocess.CalledProcessError as subprocess_exception:
         logger.error(subprocess_exception)
@@ -576,7 +575,6 @@ def interval_report(object_selected: str, group_selected: int, settings: Dict[st
         "other": {other: active_signals["other"][other] for other in others_order if other in active_signals["other"].keys()}
     }
 
-    logger.info(active_signals_order)
     return template.get_render_interval_report(socketio, slices_df, roll_df, kks_with_groups,
                                                active_signals_order["top"], active_signals_order["other"],
                                                params)
@@ -671,5 +669,4 @@ if __name__ == '__main__':
     loss_df = pd.read_csv(os.path.join(config_path[init_object]['loss'], f'loss_{init_group}.csv'), parse_dates=['timestamp'], index_col=['timestamp'])
 
     logger.info("started")
-    # app.run(host=args.host, port=args.port)
     socketio.run(app, host=args.host, port=args.port)
